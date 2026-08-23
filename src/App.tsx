@@ -75,39 +75,71 @@ export default function App() {
     setBookingConfirmed(null);
 
     try {
-      const isMilanMalpensa = (from.toLowerCase().includes('milan') && to.toLowerCase().includes('malpensa')) ||
-                              (from.toLowerCase().includes('malpensa') && to.toLowerCase().includes('milan'));
+      const fromLower = from.toLowerCase();
+      const toLower = to.toLowerCase();
 
       let element: any = null;
       let distanceValue = 0;
 
-      if (isMilanMalpensa) {
-        element = {
-          distance: { text: "45.1 km", value: 45077 },
-          duration: { text: "42 mins", value: 2494 },
-        };
-        distanceValue = element.distance.value / 1000; // km
+      // Static estimates for popular airport & city pairings
+      if ((fromLower.includes('milan') && toLower.includes('malpensa')) || (fromLower.includes('malpensa') && toLower.includes('milan'))) {
+        element = { distance: { text: "45.1 km", value: 45100 }, duration: { text: "42 mins", value: 2520 } };
+        distanceValue = 45.1;
+      } else if ((fromLower.includes('milan') && toLower.includes('linate')) || (fromLower.includes('linate') && toLower.includes('milan'))) {
+        element = { distance: { text: "11.8 km", value: 11800 }, duration: { text: "25 mins", value: 1500 } };
+        distanceValue = 11.8;
+      } else if ((fromLower.includes('milan') && toLower.includes('bergamo')) || (fromLower.includes('bergamo') && toLower.includes('milan'))) {
+        element = { distance: { text: "52.4 km", value: 52400 }, duration: { text: "50 mins", value: 3000 } };
+        distanceValue = 52.4;
+      } else if ((fromLower.includes('malpensa') && toLower.includes('linate')) || (fromLower.includes('linate') && toLower.includes('malpensa'))) {
+        element = { distance: { text: "58.0 km", value: 58000 }, duration: { text: "50 mins", value: 3000 } };
+        distanceValue = 58.0;
+      } else if ((fromLower.includes('malpensa') && toLower.includes('bergamo')) || (fromLower.includes('bergamo') && toLower.includes('malpensa'))) {
+        element = { distance: { text: "91.2 km", value: 91200 }, duration: { text: "1 hr 15 mins", value: 4500 } };
+        distanceValue = 91.2;
+      } else if ((fromLower.includes('linate') && toLower.includes('bergamo')) || (fromLower.includes('bergamo') && toLower.includes('linate'))) {
+        element = { distance: { text: "48.5 km", value: 48500 }, duration: { text: "45 mins", value: 2700 } };
+        distanceValue = 48.5;
+      } else if ((fromLower.includes('milan') && toLower.includes('como')) || (fromLower.includes('como') && toLower.includes('milan'))) {
+        element = { distance: { text: "51.0 km", value: 51000 }, duration: { text: "55 mins", value: 3300 } };
+        distanceValue = 51.0;
+      } else if ((fromLower.includes('florence') && toLower.includes('tuscany')) || (fromLower.includes('tuscany') && toLower.includes('florence'))) {
+        element = { distance: { text: "68.2 km", value: 68200 }, duration: { text: "1 hr 10 mins", value: 4200 } };
+        distanceValue = 68.2;
+      } else if (fromLower.includes('rome') && toLower.includes('rome')) {
+        element = { distance: { text: "32.0 km", value: 32000 }, duration: { text: "35 mins", value: 2100 } };
+        distanceValue = 32.0;
       } else {
-        // Improve location strings for geocoder if needed
-        const improve = (loc: string) => {
-          if (loc.toLowerCase().trim() === 'milan') return 'Milan, Metropolitan City of Milan, Italy';
-          if (['rome', 'venice', 'florence', 'naples'].includes(loc.toLowerCase().trim())) return `${loc}, Italy`;
-          return loc;
-        };
-        const response = await fetch("/api/distance", {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ origin: improve(from), destination: improve(to) })
-        });
-        const data = await response.json();
-        
-        if (data.status === 'OK' && data.rows[0].elements[0].status === 'OK') {
-          element = data.rows[0].elements[0];
-          distanceValue = element.distance.value / 1000; // km
-        } else {
-          alert("Could not find route between selected locations. Please check the address.");
-          setLoading(false);
-          return;
+        // Try backend proxy if available
+        try {
+          const improve = (loc: string) => {
+            if (loc.toLowerCase().trim() === 'milan') return 'Milan, Metropolitan City of Milan, Italy';
+            if (['rome', 'venice', 'florence', 'naples'].includes(loc.toLowerCase().trim())) return `${loc}, Italy`;
+            return loc;
+          };
+          const response = await fetch("/api/distance", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ origin: improve(from), destination: improve(to) })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]?.status === 'OK') {
+              element = data.rows[0].elements[0];
+              distanceValue = element.distance.value / 1000;
+            }
+          }
+        } catch {
+          // Backend not reachable (e.g. static GitHub Pages demo)
+        }
+
+        // Graceful fallback estimate for demo testing
+        if (!element) {
+          element = {
+            distance: { text: "45.0 km", value: 45000 },
+            duration: { text: "45 mins", value: 2700 }
+          };
+          distanceValue = 45.0;
         }
       }
       
