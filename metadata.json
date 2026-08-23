@@ -1,0 +1,6 @@
+{
+  "name": "Milan Transfer Calculator",
+  "description": "Calculates transfer distances and costs between locations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

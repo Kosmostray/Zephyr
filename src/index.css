@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --color-secondary: #f0a500;
+  --color-secondary-hover: #d99400;
+  --color-accent: #f0a500;
+  --color-background: #131313;
+  --color-surface: #131313;
+  --color-surface-container: #1f2020;
+  --color-surface-container-low: #1b1c1c;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-variant: #353535;
+  --color-on-surface: #e4e2e1;
+  --color-on-surface-variant: #c4c7c7;
+  
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #131313;
+    color: #e4e2e1;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  /* Custom Scrollbar */
+  * {
+    scrollbar-color: #f0a500 transparent !important;
+    scrollbar-width: thin !important;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+    background: transparent !important;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent !important;
+    border: none !important;
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent !important;
+  }
+  ::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #f0a500 !important;
+    border-radius: 9999px !important;
+    border: none !important;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ffba44 !important;
+  }
+}
+
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.liquid-glass:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(240, 165, 0, 0.3);
+  box-shadow: 0 0 30px rgba(240, 165, 0, 0.08);
+}
+
+.amber-glow {
+  box-shadow: 0 0 15px rgba(240, 165, 0, 0.25);
+  transition: all 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.amber-glow:hover {
+  box-shadow: 0 0 25px rgba(240, 165, 0, 0.45);
+}
+
+.text-glow {
+  text-shadow: 0 0 20px rgba(240, 165, 0, 0.3);
+}
+
+.nav-blur {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
