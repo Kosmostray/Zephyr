@@ -203,41 +203,33 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section id="hero" className="relative min-h-[92vh] flex items-center justify-center pt-28 pb-16 overflow-hidden">
-          {/* Hero Cinematic Background */}
-          <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#131313] z-10"></div>
+        <section id="hero" className="relative min-h-[92vh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden">
             <img 
-              className="w-full h-full object-cover object-center scale-105 animate-pulse"
-              style={{ animationDuration: '8s' }}
-              alt="Zephyr luxury chauffeur vehicle on Italian coast at golden hour"
+              className="w-full h-full object-cover object-[50%_50%] sm:object-[50%_52%] md:object-center scale-140 sm:scale-120 md:scale-105 transition-all duration-700"
+              alt="Zephyr luxury chauffeur vehicle on Italian coast"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTZ65tOqc5_xyijzljfjlFSPkuHAnQ49MpXm819BQCCCrxoOK5r9UuhcBojjD_5Uu8-yKNWLQUFCwW9VO1AsUoZdzf1iFqtfI0Uz7pHsn45RzwvsrYyc1SAx4_qb3cxMz8zL_f2ZN5GC8LVL1z-JQykAoaC6v_aM6Sf4gf3_hXXwLJWx9mB9JE3eFaoGEu50a_i0vFIToeWFXB7yf1ic6qCFjCA2F4qtRlKMvmlrDaW-bBJgGRjsnaskQ2Da9gzxI6OOXJa2UUFWs"
             />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#131313]/75 via-[#131313]/40 to-[#131313] pointer-events-none"></div>
           </div>
 
-          <div className="relative z-20 w-full max-w-[1440px] px-6 md:px-16 flex flex-col items-center text-center">
+          <div className="relative z-20 w-full max-w-[1440px] px-2.5 sm:px-6 md:px-16 flex flex-col items-center text-center">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs uppercase tracking-widest text-[#f0a500]">
+              <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6 text-[11px] sm:text-xs uppercase tracking-widest text-[#f0a500]">
                 <ShieldCheck size={14} /> Premier Chauffeur Services in Italy
               </div>
-              <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-glow max-w-5xl tracking-tight text-white">
+              <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-glow max-w-5xl tracking-tight text-white leading-tight">
                 Excellence in Every Kilometre
               </h1>
-              <p className="text-white/70 text-base sm:text-lg max-w-2xl mx-auto mb-10 font-light">
-                Discreet, punctual, and tailor-made luxury transfers across Milan, Lake Como, Tuscany, Rome, and the Swiss Alps.
-              </p>
             </motion.div>
 
-            {/* Travel Calculator Card */}
             <div ref={calculatorRef} className="w-full max-w-5xl">
-              <div className="liquid-glass p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-2xl border border-white/15">
+              <div className="liquid-glass p-3.5 sm:p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-2xl border border-white/15">
                 <AnimatePresence mode="wait">
                   {!result ? (
                     <motion.div
@@ -248,55 +240,52 @@ export default function App() {
                       transition={{ duration: 0.3 }}
                       className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end"
                     >
-                      {/* Starting Point Input */}
-                      <div className="flex flex-col gap-2 text-left">
-                        <label className="text-[11px] font-semibold tracking-wider text-[#c4c7c7] uppercase">
-                          Starting Point
+                      <div className="text-left">
+                        <label className="block text-xs uppercase tracking-wider text-white/70 mb-2 font-medium">
+                          Pick-up Location
                         </label>
                         <div className="relative">
                           <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#f0a500]" size={18} />
                           <input
-                            list="places-from"
+                            type="text"
+                            list="pickup-places"
                             value={from}
                             onChange={(e) => setFrom(e.target.value)}
-                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-3 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white placeholder-white/40 transition-all"
-                            placeholder="Florence Airport (FLR)"
-                            type="text"
+                            placeholder="Airport, Hotel, or City"
+                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white placeholder-white/30 transition-all"
                           />
-                          <datalist id="places-from">
-                            {popularPlaces.map((place) => (
-                              <option key={place} value={place} />
+                          <datalist id="pickup-places">
+                            {popularPlaces.map((p, idx) => (
+                              <option key={idx} value={p} />
                             ))}
                           </datalist>
                         </div>
                       </div>
 
-                      {/* Destination Input */}
-                      <div className="flex flex-col gap-2 text-left">
-                        <label className="text-[11px] font-semibold tracking-wider text-[#c4c7c7] uppercase">
-                          Destination
+                      <div className="text-left">
+                        <label className="block text-xs uppercase tracking-wider text-white/70 mb-2 font-medium">
+                          Drop-off Destination
                         </label>
                         <div className="relative">
                           <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#f0a500]" size={18} />
                           <input
-                            list="places-to"
+                            type="text"
+                            list="dropoff-places"
                             value={to}
                             onChange={(e) => setTo(e.target.value)}
-                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-3 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white placeholder-white/40 transition-all"
-                            placeholder="Tuscany Boutique Villa"
-                            type="text"
+                            placeholder="Resort, Villa, or Address"
+                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white placeholder-white/30 transition-all"
                           />
-                          <datalist id="places-to">
-                            {popularPlaces.map((place) => (
-                              <option key={place} value={place} />
+                          <datalist id="dropoff-places">
+                            {popularPlaces.map((p, idx) => (
+                              <option key={idx} value={p} />
                             ))}
                           </datalist>
                         </div>
                       </div>
 
-                      {/* Passengers Selector */}
-                      <div className="flex flex-col gap-2 text-left">
-                        <label className="text-[11px] font-semibold tracking-wider text-[#c4c7c7] uppercase">
+                      <div className="text-left">
+                        <label className="block text-xs uppercase tracking-wider text-white/70 mb-2 font-medium">
                           Passengers
                         </label>
                         <div className="relative">
@@ -306,16 +295,15 @@ export default function App() {
                             onChange={(e) => setPassengers(Number(e.target.value))}
                             className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white transition-all appearance-none cursor-pointer [&>option]:bg-[#1b1c1c] [&>option]:text-white"
                           >
-                            <option value={1}>1-2 Guests (Sedan / Coupe)</option>
-                            <option value={3}>3-4 Guests (Executive Sedan)</option>
-                            <option value={5}>5-7 Guests (Luxury Van)</option>
-                            <option value={8}>8-9 Guests (Extra Long Van)</option>
-                            <option value={10}>10+ Guests (VIP Delegation)</option>
+                            <option value={1}>1-2 Guests</option>
+                            <option value={3}>3-4 Guests</option>
+                            <option value={5}>5-7 Guests</option>
+                            <option value={8}>8-9 Guests</option>
+                            <option value={10}>10+ Guests</option>
                           </select>
                         </div>
                       </div>
 
-                      {/* Submit CTA Button */}
                       <button
                         onClick={handleCalculate}
                         disabled={!from || !to || loading}
@@ -335,59 +323,54 @@ export default function App() {
                       </button>
                     </motion.div>
                   ) : (
-                    /* Quote Results View */
                     <motion.div
                       key="calculator-result"
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -15 }}
                       transition={{ duration: 0.35 }}
-                      className="text-left space-y-6"
+                      className="text-left space-y-5 sm:space-y-6"
                     >
-                      {/* Top Bar: Back Button & 3x Larger Route Details */}
-                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 border-b border-white/10 pb-5">
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-5 border-b border-white/10 pb-4 sm:pb-5">
                         <button
                           type="button"
                           onClick={() => setResult(null)}
-                          className="text-[#f0a500] hover:text-white flex items-center gap-2 text-xs md:text-sm font-bold uppercase tracking-wider bg-white/5 py-2.5 px-4 md:px-5 rounded-xl hover:bg-white/10 transition-all cursor-pointer border border-[#f0a500]/30 hover:border-[#f0a500] shadow-sm"
+                          className="text-[#f0a500] hover:text-white flex items-center gap-2 text-xs md:text-sm font-bold uppercase tracking-wider bg-white/5 py-2 px-3.5 sm:px-5 rounded-xl hover:bg-white/10 transition-all cursor-pointer border border-[#f0a500]/30 hover:border-[#f0a500] shadow-sm"
                         >
-                          <ArrowLeft size={18} /> Modify Route
+                          <ArrowLeft size={16} className="sm:w-[18px]" /> Modify Route
                         </button>
                         
-                        {/* 3x Larger Distance & Duration Badges */}
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                          <div className="flex-1 sm:flex-initial bg-black/50 border border-white/15 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl flex items-center gap-3 sm:gap-4 shadow-xl">
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#f0a500]/15 flex items-center justify-center text-[#f0a500] flex-shrink-0">
-                              <MapPin size={22} />
+                        <div className="flex flex-row items-center gap-2.5 sm:gap-4 w-full sm:w-auto">
+                          <div className="flex-1 sm:flex-initial bg-black/50 border border-white/15 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl flex items-center gap-2.5 sm:gap-4 shadow-xl">
+                            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#f0a500]/15 flex items-center justify-center text-[#f0a500] flex-shrink-0">
+                              <MapPin size={18} className="sm:w-[22px] sm:h-[22px]" />
                             </div>
                             <div>
-                              <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-white/50 block font-semibold">Distance</span>
-                              <span className="font-mono text-xl sm:text-2xl md:text-3xl text-[#f0a500] font-bold leading-tight block">{result.distance}</span>
+                              <span className="text-[9px] sm:text-[11px] font-mono uppercase tracking-widest text-white/50 block font-semibold">Distance</span>
+                              <span className="font-mono text-lg sm:text-2xl md:text-3xl text-[#f0a500] font-bold leading-tight block">{result.distance}</span>
                             </div>
                           </div>
 
-                          <div className="flex-1 sm:flex-initial bg-black/50 border border-white/15 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl flex items-center gap-3 sm:gap-4 shadow-xl">
-                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#f0a500]/15 flex items-center justify-center text-[#f0a500] flex-shrink-0">
-                              <Clock size={22} />
+                          <div className="flex-1 sm:flex-initial bg-black/50 border border-white/15 px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl flex items-center gap-2.5 sm:gap-4 shadow-xl">
+                            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-[#f0a500]/15 flex items-center justify-center text-[#f0a500] flex-shrink-0">
+                              <Clock size={18} className="sm:w-[22px] sm:h-[22px]" />
                             </div>
                             <div>
-                              <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-white/50 block font-semibold">Duration</span>
-                              <span className="font-mono text-xl sm:text-2xl md:text-3xl text-[#f0a500] font-bold leading-tight block">{result.duration}</span>
+                              <span className="text-[9px] sm:text-[11px] font-mono uppercase tracking-widest text-white/50 block font-semibold">Duration</span>
+                              <span className="font-mono text-lg sm:text-2xl md:text-3xl text-[#f0a500] font-bold leading-tight block">{result.duration}</span>
                             </div>
                           </div>
                         </div>
                       </div>
-
-                      {/* Route Path summary */}
-                      <div className="flex items-center gap-3 text-base sm:text-lg font-medium px-1">
+                      
+                      <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-lg font-medium px-1 flex-wrap">
                         <span className="text-white font-bold">{from}</span>
-                        <span className="text-[#f0a500] font-bold text-xl">➔</span>
+                        <span className="text-[#f0a500] font-bold text-base sm:text-xl">➔</span>
                         <span className="text-white font-bold">{to}</span>
                       </div>
 
-                      {/* Group Workflow if >= 10 Guests */}
                       {passengers >= 10 ? (
-                        <div className="p-8 rounded-2xl bg-gradient-to-r from-[#f0a500]/10 to-transparent border border-[#f0a500]/40 text-center space-y-4">
+                        <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[#f0a500]/10 to-transparent border border-[#f0a500]/40 text-center space-y-4">
                           <div className="w-12 h-12 mx-auto rounded-full bg-[#f0a500]/20 flex items-center justify-center text-[#f0a500]">
                             <Users size={24} />
                           </div>
@@ -411,22 +394,19 @@ export default function App() {
                           </div>
                         </div>
                       ) : (
-                        /* Vehicles Cards Horizontal Slider (Fixed Height & Width) */
                         <div className="relative group/slider">
-                          {/* Left Navigation Arrow */}
                           <button
                             type="button"
-                            onClick={() => listRef.current?.scrollBy({ left: -340, behavior: 'smooth' })}
-                            className="absolute -left-3 md:-left-5 top-1/2 -translate-y-1/2 bg-[#131313]/95 border border-white/20 hover:border-[#f0a500] p-2.5 md:p-3 rounded-full text-[#f0a500] z-30 hover:bg-[#f0a500] hover:text-black transition-all shadow-xl shadow-black/60 cursor-pointer active:scale-95"
+                            onClick={() => listRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
+                            className="absolute -left-2.5 sm:-left-4 md:-left-5 top-1/2 -translate-y-1/2 bg-[#131313]/95 border border-white/20 hover:border-[#f0a500] p-2.5 sm:p-3 rounded-full text-[#f0a500] z-30 hover:bg-[#f0a500] hover:text-black transition-all shadow-xl shadow-black/70 cursor-pointer active:scale-95 flex items-center justify-center"
                             aria-label="Scroll left"
                           >
-                            <ChevronLeft size={22} />
+                            <ChevronLeft size={20} className="sm:w-[22px] sm:h-[22px]" />
                           </button>
 
-                          {/* Horizontal Track */}
                           <div 
                             ref={listRef}
-                            className="flex flex-row gap-5 overflow-x-auto py-2 px-1 snap-x snap-mandatory scroll-smooth custom-scrollbar"
+                            className="flex flex-row gap-3.5 sm:gap-5 overflow-x-auto py-2 px-1 snap-x snap-mandatory scroll-smooth custom-scrollbar"
                             style={{ scrollbarWidth: 'thin' }}
                           >
                             {Object.entries(result.prices)
@@ -443,61 +423,53 @@ export default function App() {
                                 return (
                                   <div
                                     key={type}
-                                    className={`glass-card p-5 md:p-6 rounded-2xl flex flex-col justify-between transition-all group flex-shrink-0 w-[290px] sm:w-[310px] md:w-[330px] snap-start select-none ${
+                                    className={`glass-card p-4 sm:p-5 md:p-6 rounded-2xl flex flex-col justify-between transition-all group flex-shrink-0 w-[265px] sm:w-[300px] md:w-[330px] snap-center select-none text-center ${
                                       isBooked ? 'border-[#f0a500] bg-[#f0a500]/10 shadow-[0_0_25px_rgba(240,165,0,0.25)] ring-2 ring-[#f0a500]' : ''
                                     }`}
                                   >
                                     <div>
-                                      {/* Vehicle Image */}
-                                      <div className="relative w-full h-[145px] overflow-hidden rounded-xl mb-4 bg-black/60 border border-white/10 shadow-inner">
+                                      <div className="relative w-full h-[135px] sm:h-[145px] overflow-hidden rounded-xl mb-3.5 bg-black/60 border border-white/10 shadow-inner">
                                         <img
                                           src={vehicleImages[type]}
                                           alt={type}
                                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
-                                        {/* Enlarged Photo Badge */}
-                                        <div className="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold font-mono text-[#f0a500] uppercase border border-[#f0a500]/40 tracking-wider shadow-lg">
+                                        <div className="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-md px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold font-mono text-[#f0a500] uppercase border border-[#f0a500]/40 tracking-wider shadow-lg">
                                           {type}
                                         </div>
                                       </div>
 
-                                      {/* Title & Model */}
-                                      <div className="mb-2">
-                                        <h4 className="font-serif font-bold text-xl md:text-2xl text-white group-hover:text-[#f0a500] transition-colors truncate">
+                                      <div className="mb-2 text-center">
+                                        <h4 className="font-serif font-bold text-xl sm:text-2xl text-white group-hover:text-[#f0a500] transition-colors truncate">
                                           {type}
                                         </h4>
-                                        <p className="text-xs md:text-sm text-white/70 truncate mt-0.5">{spec.model}</p>
+                                        <p className="text-xs sm:text-sm text-white/70 truncate mt-0.5">{spec.model}</p>
                                       </div>
 
-                                      {/* Capacity Spec Badges (Enlarged) */}
-                                      <div className="flex items-center gap-2.5 mt-3 mb-2">
-                                        <span className="flex items-center gap-1.5 bg-white/10 border border-white/10 px-3 py-1 rounded-lg text-xs md:text-sm font-medium text-white/90">
-                                          <Users size={15} className="text-[#f0a500]" /> {spec.capacity}
+                                      <div className="flex items-center justify-center gap-2 sm:gap-2.5 mt-2.5 mb-2">
+                                        <span className="flex items-center gap-1.5 bg-white/10 border border-white/10 px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium text-white/90">
+                                          <Users size={14} className="text-[#f0a500]" /> {spec.capacity}
                                         </span>
-                                        <span className="flex items-center gap-1.5 bg-white/10 border border-white/10 px-3 py-1 rounded-lg text-xs md:text-sm font-medium text-white/90">
-                                          <Briefcase size={15} className="text-[#f0a500]" /> {spec.luggage}
+                                        <span className="flex items-center gap-1.5 bg-white/10 border border-white/10 px-2.5 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-medium text-white/90">
+                                          <Briefcase size={14} className="text-[#f0a500]" /> {spec.luggage}
                                         </span>
                                       </div>
                                     </div>
 
-                                    {/* Price & Action Section */}
                                     <div className="pt-2">
-                                      {/* Fixed Rate (ABOVE the horizontal separator) */}
-                                      <div className="flex items-baseline justify-between pt-2">
-                                        <span className="text-xs uppercase font-mono tracking-widest text-white/50 font-semibold">Fixed Rate</span>
-                                        <span className="text-2xl md:text-3xl font-mono font-bold text-[#f0a500]">
+                                      <div className="flex items-baseline justify-between px-1 pt-1 sm:pt-2">
+                                        <span className="text-[11px] sm:text-xs uppercase font-mono tracking-widest text-white/50 font-semibold">Fixed Rate</span>
+                                        <span className="text-2xl sm:text-3xl font-mono font-bold text-[#f0a500]">
                                           €{Math.round(price)}
                                         </span>
                                       </div>
 
-                                      {/* Horizontal Separator */}
-                                      <div className="w-full h-px bg-white/15 my-3.5 group-hover:bg-white/25 transition-colors"></div>
+                                      <div className="w-full h-px bg-white/15 my-3 group-hover:bg-white/25 transition-colors"></div>
 
-                                      {/* Select Button (BELOW separator, full-width and centered) */}
                                       <button
                                         type="button"
                                         onClick={() => setBookingConfirmed(type)}
-                                        className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 shadow-md ${
+                                        className={`w-full py-3 sm:py-3.5 px-4 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 shadow-md ${
                                           isBooked
                                             ? 'bg-[#f0a500] text-black shadow-lg shadow-[#f0a500]/40 font-extrabold ring-2 ring-[#f0a500]'
                                             : 'bg-white/10 hover:bg-[#f0a500] hover:text-black text-white hover:shadow-lg hover:shadow-[#f0a500]/20'
@@ -505,7 +477,7 @@ export default function App() {
                                       >
                                         {isBooked ? (
                                           <>
-                                            <CheckCircle2 size={18} /> Selected
+                                            <CheckCircle2 size={16} className="sm:w-[18px] sm:h-[18px]" /> Selected
                                           </>
                                         ) : (
                                           'Select'
@@ -517,19 +489,17 @@ export default function App() {
                               })}
                           </div>
 
-                          {/* Right Navigation Arrow */}
                           <button
                             type="button"
-                            onClick={() => listRef.current?.scrollBy({ left: 340, behavior: 'smooth' })}
-                            className="absolute -right-3 md:-right-5 top-1/2 -translate-y-1/2 bg-[#131313]/95 border border-white/20 hover:border-[#f0a500] p-2.5 md:p-3 rounded-full text-[#f0a500] z-30 hover:bg-[#f0a500] hover:text-black transition-all shadow-xl shadow-black/60 cursor-pointer active:scale-95"
+                            onClick={() => listRef.current?.scrollBy({ left: 320, behavior: 'smooth' })}
+                            className="absolute -right-2.5 sm:-right-4 md:-right-5 top-1/2 -translate-y-1/2 bg-[#131313]/95 border border-white/20 hover:border-[#f0a500] p-2.5 sm:p-3 rounded-full text-[#f0a500] z-30 hover:bg-[#f0a500] hover:text-black transition-all shadow-xl shadow-black/70 cursor-pointer active:scale-95 flex items-center justify-center"
                             aria-label="Scroll right"
                           >
-                            <ChevronRight size={22} />
+                            <ChevronRight size={20} className="sm:w-[22px] sm:h-[22px]" />
                           </button>
                         </div>
                       )}
 
-                      {/* Confirmation Banner */}
                       {bookingConfirmed && (
                         <motion.div 
                           initial={{ opacity: 0, y: 10 }}
