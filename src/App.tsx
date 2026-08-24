@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef } from 'react';
+import React, { useState, useRef, FormEvent } from 'react';
 import { 
   MapPin, 
   Navigation, 
@@ -12,15 +12,18 @@ import {
   Loader2, 
   ArrowLeft, 
   ChevronLeft, 
-  ChevronRight,
-  ShieldCheck,
-  Clock,
-  Car,
-  Briefcase,
-  Sparkles,
-  Phone,
-  Mail,
-  CheckCircle2
+  ChevronRight, 
+  ShieldCheck, 
+  Clock, 
+  Car, 
+  Briefcase, 
+  Phone, 
+  Mail, 
+  CheckCircle2, 
+  Menu, 
+  X,
+  MessageCircle,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -31,8 +34,36 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    serviceType: 'Transfer Service',
+    message: ''
+  });
+  const [contactSending, setContactSending] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState(false);
+
   const listRef = useRef<HTMLDivElement>(null);
   const calculatorRef = useRef<HTMLDivElement>(null);
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactSending(true);
+    setTimeout(() => {
+      setContactSending(false);
+      setContactSuccess(true);
+      setContactForm({
+        name: '',
+        email: '',
+        phone: '',
+        serviceType: 'Transfer Service',
+        message: ''
+      });
+      setTimeout(() => setContactSuccess(false), 6000);
+    }, 1000);
+  };
 
   const vehicleImages: Record<string, string> = {
     "Standard": "https://s3.typebot.io/public/workspaces/cm3uh0rsn00043dqso62t0m80/typebots/b1sh10gypk6y8ttbhgoorzkw/blocks/z7xzd6hytaejjjnyupsadvpu/items/dfyj5emyiaisjgou1fxmedvu?v=1759389843093",
@@ -168,16 +199,16 @@ export default function App() {
     <div className="min-h-screen bg-[#131313] text-[#e4e2e1] flex flex-col font-sans selection:bg-[#f0a500] selection:text-[#131313]">
       {/* Top Navigation Bar */}
       <nav className="fixed top-0 w-full z-50 bg-[#131313]/70 nav-blur border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-        <div className="flex justify-between items-center px-6 md:px-16 py-5 max-w-[1440px] mx-auto">
+        <div className="flex justify-between items-center px-4 sm:px-8 md:px-16 py-4 sm:py-5 max-w-[1440px] mx-auto">
           <a href="#" className="flex items-center gap-2 group">
-            <span className="font-serif text-2xl font-bold tracking-widest text-[#f0a500] transition-transform group-hover:scale-105">
-              ZEPHYR
-            </span>
-            <span className="text-[10px] tracking-[0.25em] text-white/50 uppercase font-mono hidden sm:inline-block">
-              CHAUFFEUR
-            </span>
+            <img 
+              src="./logo.png" 
+              alt="ZEPHYR Transfer" 
+              className="h-8 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
+            />
           </a>
 
+          {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-10 text-sm font-medium">
             <a href="#hero" className="text-[#f0a500] border-b-2 border-[#f0a500] pb-1 transition-all">
               Home
@@ -191,27 +222,128 @@ export default function App() {
             <a href="#fleet" className="text-[#e4e2e1]/70 hover:text-[#f0a500] transition-colors">
               Fleet
             </a>
+            <a href="#contact" className="text-[#e4e2e1]/70 hover:text-[#f0a500] transition-colors">
+              Contact
+            </a>
           </div>
 
+          {/* Desktop Book Now Button */}
           <button 
             onClick={scrollToCalculator}
-            className="bg-[#f0a500] text-[#131313] px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider amber-glow transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
+            className="hidden md:flex bg-[#f0a500] text-[#131313] px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider amber-glow transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer items-center gap-2"
           >
-            <Sparkles size={14} />
+            <Car size={16} />
             <span>Book Now</span>
+          </button>
+
+          {/* Mobile Hamburger Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="md:hidden p-2.5 rounded-xl bg-white/5 border border-white/10 text-[#f0a500] hover:bg-white/10 transition-all cursor-pointer active:scale-95 flex items-center justify-center"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={22} />
           </button>
         </div>
       </nav>
+
+      {/* Fullscreen Mobile Navigation Menu Modal */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[100] bg-[#131313]/98 backdrop-blur-2xl flex flex-col justify-between p-6 sm:p-8"
+          >
+            {/* Top Bar with Logo & Close Button */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-5">
+              <img 
+                src="./logo.png" 
+                alt="ZEPHYR Transfer" 
+                className="h-8 w-auto object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-[#f0a500] hover:bg-white/10 transition-all cursor-pointer active:scale-95"
+                aria-label="Close navigation menu"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Menu Links */}
+            <div className="flex flex-col items-center justify-center gap-7 my-auto py-6">
+              <a
+                href="#hero"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-serif text-3xl font-bold text-white hover:text-[#f0a500] transition-colors"
+              >
+                Home
+              </a>
+              <a
+                href="#experience"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-serif text-3xl font-bold text-white/80 hover:text-[#f0a500] transition-colors"
+              >
+                Experience
+              </a>
+              <a
+                href="#destinations"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-serif text-3xl font-bold text-white/80 hover:text-[#f0a500] transition-colors"
+              >
+                Destinations
+              </a>
+              <a
+                href="#fleet"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-serif text-3xl font-bold text-white/80 hover:text-[#f0a500] transition-colors"
+              >
+                Fleet
+              </a>
+              <a
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="font-serif text-3xl font-bold text-white/80 hover:text-[#f0a500] transition-colors"
+              >
+                Contact
+              </a>
+            </div>
+
+            {/* Bottom Book Now CTA in Mobile Menu */}
+            <div className="space-y-4 pt-4 border-t border-white/10 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  scrollToCalculator();
+                }}
+                className="w-full bg-[#f0a500] text-[#131313] py-4 rounded-2xl font-bold text-sm uppercase tracking-wider amber-glow transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2.5 shadow-xl shadow-[#f0a500]/25"
+              >
+                <Car size={18} />
+                <span>Book Now</span>
+              </button>
+              <p className="text-white/40 text-xs font-mono">
+                24/7 VIP Concierge Dispatch: +39 02 1234 5678
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-grow">
         <section id="hero" className="relative min-h-[92vh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <img 
-              className="w-full h-full object-cover object-[50%_40%] sm:object-[50%_48%] md:object-center scale-150 sm:scale-125 md:scale-105 -translate-y-8 sm:-translate-y-4 md:translate-y-0 transition-all duration-700"
-              alt="Zephyr luxury chauffeur vehicle on Italian coast"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTZ65tOqc5_xyijzljfjlFSPkuHAnQ49MpXm819BQCCCrxoOK5r9UuhcBojjD_5Uu8-yKNWLQUFCwW9VO1AsUoZdzf1iFqtfI0Uz7pHsn45RzwvsrYyc1SAx4_qb3cxMz8zL_f2ZN5GC8LVL1z-JQykAoaC6v_aM6Sf4gf3_hXXwLJWx9mB9JE3eFaoGEu50a_i0vFIToeWFXB7yf1ic6qCFjCA2F4qtRlKMvmlrDaW-bBJgGRjsnaskQ2Da9gzxI6OOXJa2UUFWs"
+              className="w-full h-full object-cover object-[35%_65%] sm:object-[45%_60%] md:object-center scale-110 sm:scale-105 md:scale-100 transition-all duration-700"
+              alt="Zephyr luxury Mercedes-Benz chauffeur vehicle on Italian Amalfi Coast at sunset"
+              src="./hero-bg.jpg"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#131313]/70 via-[#131313]/35 to-[#131313] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#131313] pointer-events-none"></div>
           </div>
 
           <div className="relative z-20 w-full max-w-[1440px] px-2.5 sm:px-6 md:px-16 flex flex-col items-center text-center">
@@ -220,8 +352,9 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-4 sm:mb-6 text-[11px] sm:text-xs uppercase tracking-widest text-[#f0a500]">
-                <ShieldCheck size={14} /> Premier Chauffeur Services in Italy
+              <div className="inline-flex items-center gap-2.5 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-[#131313]/85 backdrop-blur-2xl border border-white/20 mb-5 sm:mb-7 text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#f0a500] font-semibold shadow-2xl shadow-black/60 ring-1 ring-white/10 hover:border-[#f0a500]/50 transition-all">
+                <ShieldCheck size={18} className="text-[#f0a500] flex-shrink-0" />
+                <span>Premier Chauffeur Services in Italy</span>
               </div>
               <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-glow max-w-5xl tracking-tight text-white leading-tight">
                 Excellence in Every Kilometre
@@ -540,38 +673,68 @@ export default function App() {
             <div className="w-16 h-1 bg-[#f0a500] mx-auto rounded-full"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {/* Punctuality Card */}
-            <div className="liquid-glass p-8 md:p-10 rounded-2xl group hover:-translate-y-2 transition-all">
-              <div className="w-14 h-14 rounded-2xl bg-[#f0a500]/10 border border-[#f0a500]/30 flex items-center justify-center text-[#f0a500] mb-6 group-hover:scale-110 transition-transform">
-                <Clock size={28} />
+            <div className="relative isolate min-h-[380px] sm:min-h-[420px] rounded-2xl md:rounded-3xl overflow-hidden group hover:-translate-y-2 transition-all duration-500 border border-white/15 shadow-2xl flex flex-col justify-end p-6 sm:p-8 md:p-10 text-left bg-[#131313]">
+              <img 
+                src="./Absolute Punctuality.jpg" 
+                alt="Absolute Punctuality" 
+                className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/65 to-black/10 z-10 pointer-events-none"></div>
+              <div className="relative z-20">
+                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#f0a500] block mb-2 font-semibold">
+                  Precision On Time
+                </span>
+                <h3 className="font-serif text-2xl font-bold mb-3 text-white group-hover:text-[#f0a500] transition-colors">
+                  Absolute Punctuality
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed font-normal">
+                  Precision is our heritage. We monitor flights and real-time traffic to guarantee your chauffeur is staged 15 minutes prior to your arrival.
+                </p>
               </div>
-              <h3 className="font-serif text-xl font-bold mb-3 text-white">Absolute Punctuality</h3>
-              <p className="text-white/60 text-sm leading-relaxed">
-                Precision is our heritage. We monitor flights and real-time traffic to guarantee your chauffeur is staged 15 minutes prior to your arrival.
-              </p>
             </div>
 
-            {/* Local Expertise Card */}
-            <div className="liquid-glass p-8 md:p-10 rounded-2xl group hover:-translate-y-2 transition-all">
-              <div className="w-14 h-14 rounded-2xl bg-[#f0a500]/10 border border-[#f0a500]/30 flex items-center justify-center text-[#f0a500] mb-6 group-hover:scale-110 transition-transform">
-                <MapPin size={28} />
+            {/* Local Mastery Card */}
+            <div className="relative isolate min-h-[380px] sm:min-h-[420px] rounded-2xl md:rounded-3xl overflow-hidden group hover:-translate-y-2 transition-all duration-500 border border-white/15 shadow-2xl flex flex-col justify-end p-6 sm:p-8 md:p-10 text-left bg-[#131313]">
+              <img 
+                src="./Local Mastery.jpg" 
+                alt="Local Mastery" 
+                className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/65 to-black/10 z-10 pointer-events-none"></div>
+              <div className="relative z-20">
+                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#f0a500] block mb-2 font-semibold">
+                  Elite Drivers
+                </span>
+                <h3 className="font-serif text-2xl font-bold mb-3 text-white group-hover:text-[#f0a500] transition-colors">
+                  Local Mastery
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed font-normal">
+                  Our chauffeurs are certified multilingual ambassadors, navigating Milan's restricted zones and winding coastal cliffs with effortless grace.
+                </p>
               </div>
-              <h3 className="font-serif text-xl font-bold mb-3 text-white">Local Mastery</h3>
-              <p className="text-white/60 text-sm leading-relaxed">
-                Our chauffeurs are certified multilingual ambassadors, navigating Milan's restricted zones and winding coastal cliffs with effortless grace.
-              </p>
             </div>
 
-            {/* Premium Fleet Card */}
-            <div className="liquid-glass p-8 md:p-10 rounded-2xl group hover:-translate-y-2 transition-all">
-              <div className="w-14 h-14 rounded-2xl bg-[#f0a500]/10 border border-[#f0a500]/30 flex items-center justify-center text-[#f0a500] mb-6 group-hover:scale-110 transition-transform">
-                <Car size={28} />
+            {/* Pristine Fleet Card */}
+            <div className="relative isolate min-h-[380px] sm:min-h-[420px] rounded-2xl md:rounded-3xl overflow-hidden group hover:-translate-y-2 transition-all duration-500 border border-white/15 shadow-2xl flex flex-col justify-end p-6 sm:p-8 md:p-10 text-left bg-[#131313]">
+              <img 
+                src="./Pristine Fleet.jpg" 
+                alt="Pristine Fleet" 
+                className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/65 to-black/10 z-10 pointer-events-none"></div>
+              <div className="relative z-20">
+                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-[#f0a500] block mb-2 font-semibold">
+                  Luxury Vehicles
+                </span>
+                <h3 className="font-serif text-2xl font-bold mb-3 text-white group-hover:text-[#f0a500] transition-colors">
+                  Pristine Fleet
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed font-normal">
+                  From executive S-Class sedans to luxury V-Class transporters, every vehicle offers high-speed Wi-Fi, chilled mineral water, and sanitization.
+                </p>
               </div>
-              <h3 className="font-serif text-xl font-bold mb-3 text-white">Pristine Fleet</h3>
-              <p className="text-white/60 text-sm leading-relaxed">
-                From executive S-Class sedans to luxury V-Class transporters, every vehicle offers high-speed Wi-Fi, chilled mineral water, and sanitization.
-              </p>
             </div>
           </div>
         </section>
@@ -677,7 +840,24 @@ export default function App() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {/* Standard Class */}
+            <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-4 bg-black/40">
+                <img src={vehicleImages["Standard"]} alt="Standard Sedan" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <span className="text-xs font-mono text-[#f0a500] uppercase block mb-1">Standard Class</span>
+                <h3 className="font-serif text-xl font-bold text-white mb-2">Mercedes C-Class / Passat</h3>
+                <p className="text-xs text-white/60 mb-4">Reliable and comfortable chauffeur service for daily city travel and efficient airport transfers.</p>
+              </div>
+              <div className="pt-4 border-t border-white/10 flex justify-between items-center text-xs text-white/70">
+                <span>3 Passengers · 2 Bags</span>
+                <span className="text-[#f0a500] font-semibold">Comfort Sedan</span>
+              </div>
+            </div>
+
+            {/* Executive Class */}
             <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
               <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-4 bg-black/40">
                 <img src={vehicleImages["Business"]} alt="Executive Sedan" className="w-full h-full object-cover" />
@@ -685,7 +865,7 @@ export default function App() {
               <div>
                 <span className="text-xs font-mono text-[#f0a500] uppercase block mb-1">Executive Class</span>
                 <h3 className="font-serif text-xl font-bold text-white mb-2">Mercedes-Benz E-Class</h3>
-                <p className="text-xs text-white/60 mb-4">Quiet luxury tailored for seamless corporate commutes and airport transfers.</p>
+                <p className="text-xs text-white/60 mb-4">Quiet luxury tailored for seamless corporate commutes and business airport transfers.</p>
               </div>
               <div className="pt-4 border-t border-white/10 flex justify-between items-center text-xs text-white/70">
                 <span>3 Passengers · 2 Bags</span>
@@ -693,6 +873,7 @@ export default function App() {
               </div>
             </div>
 
+            {/* First Class */}
             <div className="glass-card p-6 rounded-2xl flex flex-col justify-between border-[#f0a500]/30 shadow-[0_0_30px_rgba(240,165,0,0.06)]">
               <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-4 bg-black/40">
                 <img src={vehicleImages["Luxury"]} alt="First Class Sedan" className="w-full h-full object-cover" />
@@ -704,10 +885,11 @@ export default function App() {
               </div>
               <div className="pt-4 border-t border-white/10 flex justify-between items-center text-xs text-white/70">
                 <span>3 Passengers · 3 Bags</span>
-                <span className="text-[#f0a500] font-semibold">Ultimate Comfort</span>
+                <span className="text-[#f0a500] font-semibold">Ultimate Luxury</span>
               </div>
             </div>
 
+            {/* Luxury Transporter */}
             <div className="glass-card p-6 rounded-2xl flex flex-col justify-between">
               <div className="relative aspect-[16/10] overflow-hidden rounded-xl mb-4 bg-black/40">
                 <img src={vehicleImages["Business Van"]} alt="Luxury Transporter" className="w-full h-full object-cover" />
@@ -724,13 +906,215 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        {/* Contact Us Section */}
+        <section id="contact" className="py-20 sm:py-28 px-4 sm:px-8 md:px-16 max-w-[1440px] mx-auto w-full relative">
+          {/* Subtle Ambient Lighting */}
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#f0a500]/5 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+          <div className="absolute bottom-10 left-0 w-[400px] h-[400px] bg-[#f0a500]/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+
+          {/* Header */}
+          <div className="mb-12 sm:mb-16 max-w-3xl text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#131313]/85 backdrop-blur-xl border border-white/15 mb-4 text-xs uppercase tracking-widest text-[#f0a500] font-semibold">
+              <ShieldCheck size={14} /> Premier Chauffeur Concierge
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
+              Connect With Us
+            </h2>
+            <p className="text-sm sm:text-base text-white/60 leading-relaxed max-w-2xl">
+              Experience unparalleled chauffeur excellence across Italy. Reach out to our 24/7 concierge team to tailor your bespoke transfer, airport VIP meet-and-greet, or executive corporate fleet requirements.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* Contact Form (Bento Main - 7 cols) */}
+            <div className="lg:col-span-7 glass-card p-6 sm:p-10 rounded-2xl md:rounded-3xl relative overflow-hidden">
+              {contactSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 rounded-xl bg-[#f0a500]/15 border border-[#f0a500]/40 text-[#f0a500] text-sm flex items-center gap-3"
+                >
+                  <CheckCircle2 size={18} className="flex-shrink-0" />
+                  <span>Thank you! Your inquiry has been dispatched to our VIP Concierge team. We will contact you within 15 minutes.</span>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleContactSubmit} className="space-y-5 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-2 text-left">
+                    <label className="block text-xs uppercase tracking-widest text-white/70 font-medium">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      placeholder="e.g. Giacomo Rossi"
+                      className="w-full bg-black/50 border border-white/20 rounded-xl py-3.5 px-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/35 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2 text-left">
+                    <label className="block text-xs uppercase tracking-widest text-white/70 font-medium">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      placeholder="e.g. giacomo@luxury.it"
+                      className="w-full bg-black/50 border border-white/20 rounded-xl py-3.5 px-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/35 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-2 text-left">
+                    <label className="block text-xs uppercase tracking-widest text-white/70 font-medium">
+                      Phone / WhatsApp
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactForm.phone}
+                      onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                      placeholder="e.g. +39 333 123 4567"
+                      className="w-full bg-black/50 border border-white/20 rounded-xl py-3.5 px-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/35 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2 text-left">
+                    <label className="block text-xs uppercase tracking-widest text-white/70 font-medium">
+                      Service Type
+                    </label>
+                    <select
+                      value={contactForm.serviceType}
+                      onChange={(e) => setContactForm({ ...contactForm, serviceType: e.target.value })}
+                      className="w-full bg-black/50 border border-white/20 rounded-xl py-3.5 px-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white transition-all appearance-none cursor-pointer [&>option]:bg-[#1b1c1c] [&>option]:text-white"
+                    >
+                      <option value="Transfer Service">Point-to-Point VIP Transfer</option>
+                      <option value="Airport VIP Chauffeur">Airport VIP Chauffeur & Meet & Greet</option>
+                      <option value="Daily Chauffeur Hire">By-The-Hour / Full Day Chauffeur Hire</option>
+                      <option value="Corporate Fleet">Corporate & Event Fleet Logistics</option>
+                      <option value="Custom Tour">Tuscany & Lake Como Bespoke Tour</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-left">
+                  <label className="block text-xs uppercase tracking-widest text-white/70 font-medium">
+                    Message & Transfer Details *
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    placeholder="Tell us about dates, passenger count, luggage, flight numbers, or special requirements..."
+                    className="w-full bg-black/50 border border-white/20 rounded-xl py-3.5 px-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/35 transition-all resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={contactSending}
+                  className="w-full sm:w-auto bg-[#f0a500] hover:bg-[#d99400] text-[#131313] px-10 py-4 rounded-xl font-bold text-xs uppercase tracking-[0.2em] amber-glow transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2.5 shadow-lg shadow-[#f0a500]/20"
+                >
+                  {contactSending ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      <span>Transmitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      <span>Send Message</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Sidebar Info (5 cols) */}
+            <div className="lg:col-span-5 flex flex-col gap-6 w-full">
+              {/* Direct Channels Card */}
+              <div className="glass-card p-6 sm:p-8 rounded-2xl md:rounded-3xl text-left">
+                <h3 className="text-xl font-bold text-[#f0a500] mb-6 tracking-tight">Direct Concierge Channels</h3>
+                <div className="space-y-5">
+                  <a href="tel:+390212345678" className="flex items-center gap-4 group transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#f0a500] group-hover:border-[#f0a500]/40 group-hover:scale-105 transition-all flex-shrink-0">
+                      <Phone size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-white/50 uppercase tracking-widest font-medium">24/7 Phone Dispatch</p>
+                      <p className="text-base font-semibold text-white group-hover:text-[#f0a500] transition-colors">+39 02 1234 5678</p>
+                    </div>
+                  </a>
+
+                  <a href="https://wa.me/393331234567" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#f0a500] group-hover:border-[#f0a500]/40 group-hover:scale-105 transition-all flex-shrink-0">
+                      <MessageCircle size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-white/50 uppercase tracking-widest font-medium">WhatsApp VIP Concierge</p>
+                      <p className="text-base font-semibold text-white group-hover:text-[#f0a500] transition-colors">+39 333 123 4567</p>
+                    </div>
+                  </a>
+
+                  <a href="mailto:bookings@zephyrtransfer.com" className="flex items-center gap-4 group transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#f0a500] group-hover:border-[#f0a500]/40 group-hover:scale-105 transition-all flex-shrink-0">
+                      <Mail size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-white/50 uppercase tracking-widest font-medium">Email Dispatch</p>
+                      <p className="text-base font-semibold text-white group-hover:text-[#f0a500] transition-colors">bookings@zephyrtransfer.com</p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+
+              {/* Hubs / Operational Coverage */}
+              <div className="glass-card p-6 sm:p-8 rounded-2xl md:rounded-3xl text-left space-y-4">
+                <h4 className="text-xs uppercase tracking-[0.2em] text-[#f0a500] font-semibold">Italian Hubs & Coverage</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 text-white font-bold text-sm mb-1">
+                      <MapPin size={14} className="text-[#f0a500]" /> Milan Office
+                    </div>
+                    <p className="text-xs text-white/50 leading-relaxed">
+                      Via Montenapoleone 8. Serving Malpensa (MXP), Linate (LIN), Bergamo (BGY), Lake Como & Swiss Alps.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 text-white font-bold text-sm mb-1">
+                      <MapPin size={14} className="text-[#f0a500]" /> Rome Concierge
+                    </div>
+                    <p className="text-xs text-white/50 leading-relaxed">
+                      Via Veneto 42. Serving Fiumicino (FCO), Ciampino (CIA), Tuscany, Amalfi Coast & Florence.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-2 flex items-center gap-2 text-xs text-white/40 font-mono">
+                  <Clock size={14} className="text-[#f0a500]" />
+                  <span>Guaranteed on-time arrival & 60 min complimentary airport waiting</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
       <footer className="bg-[#0e0e0e] border-t border-white/5 pt-16 pb-12 px-6 md:px-16 text-xs text-white/60">
         <div className="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           <div className="space-y-4">
-            <div className="font-serif text-2xl font-bold tracking-widest text-[#f0a500]">ZEPHYR</div>
+            <img 
+              src="./logo.png" 
+              alt="ZEPHYR Transfer" 
+              className="h-8 sm:h-9 w-auto object-contain"
+            />
             <p className="text-white/50 text-xs leading-relaxed max-w-xs">
               Crafting elite chauffeur-driven transportation experiences across Italy's and Europe's most prestigious routes.
             </p>
