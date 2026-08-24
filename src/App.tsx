@@ -207,11 +207,11 @@ export default function App() {
         <section id="hero" className="relative min-h-[92vh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <img 
-              className="w-full h-full object-cover object-[50%_50%] sm:object-[50%_52%] md:object-center scale-140 sm:scale-120 md:scale-105 transition-all duration-700"
+              className="w-full h-full object-cover object-[50%_40%] sm:object-[50%_48%] md:object-center scale-150 sm:scale-125 md:scale-105 -translate-y-8 sm:-translate-y-4 md:translate-y-0 transition-all duration-700"
               alt="Zephyr luxury chauffeur vehicle on Italian coast"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTZ65tOqc5_xyijzljfjlFSPkuHAnQ49MpXm819BQCCCrxoOK5r9UuhcBojjD_5Uu8-yKNWLQUFCwW9VO1AsUoZdzf1iFqtfI0Uz7pHsn45RzwvsrYyc1SAx4_qb3cxMz8zL_f2ZN5GC8LVL1z-JQykAoaC6v_aM6Sf4gf3_hXXwLJWx9mB9JE3eFaoGEu50a_i0vFIToeWFXB7yf1ic6qCFjCA2F4qtRlKMvmlrDaW-bBJgGRjsnaskQ2Da9gzxI6OOXJa2UUFWs"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#131313]/75 via-[#131313]/40 to-[#131313] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#131313]/70 via-[#131313]/35 to-[#131313] pointer-events-none"></div>
           </div>
 
           <div className="relative z-20 w-full max-w-[1440px] px-2.5 sm:px-6 md:px-16 flex flex-col items-center text-center">
@@ -252,7 +252,7 @@ export default function App() {
                             value={from}
                             onChange={(e) => setFrom(e.target.value)}
                             placeholder="Airport, Hotel, or City"
-                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white placeholder-white/30 transition-all"
+                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/40 transition-all"
                           />
                           <datalist id="pickup-places">
                             {popularPlaces.map((p, idx) => (
@@ -274,7 +274,7 @@ export default function App() {
                             value={to}
                             onChange={(e) => setTo(e.target.value)}
                             placeholder="Resort, Villa, or Address"
-                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white placeholder-white/30 transition-all"
+                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/40 transition-all"
                           />
                           <datalist id="dropoff-places">
                             {popularPlaces.map((p, idx) => (
@@ -293,7 +293,7 @@ export default function App() {
                           <select
                             value={passengers}
                             onChange={(e) => setPassengers(Number(e.target.value))}
-                            className="w-full bg-white/5 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] text-sm text-white transition-all appearance-none cursor-pointer [&>option]:bg-[#1b1c1c] [&>option]:text-white"
+                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white transition-all appearance-none cursor-pointer [&>option]:bg-[#1b1c1c] [&>option]:text-white"
                           >
                             <option value={1}>1-2 Guests</option>
                             <option value={3}>3-4 Guests</option>
