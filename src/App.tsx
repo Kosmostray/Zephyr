@@ -196,9 +196,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#131313] text-[#e4e2e1] flex flex-col font-sans selection:bg-[#f0a500] selection:text-[#131313]">
+    <div className="min-h-screen bg-[#131313] text-[#e4e2e1] flex flex-col font-sans selection:bg-[#f0a500] selection:text-[#131313] overflow-x-hidden w-full max-w-full relative">
       {/* Top Navigation Bar */}
-      <nav className="fixed top-0 w-full z-50 bg-[#131313]/70 nav-blur border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
+      <nav className="fixed top-0 left-0 right-0 w-full z-50 bg-[#131313]/70 nav-blur border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
         <div className="flex justify-between items-center px-4 sm:px-8 md:px-16 py-4 sm:py-5 max-w-[1440px] mx-auto">
           <a href="#" className="flex items-center gap-2 group">
             <img 
@@ -352,9 +352,9 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2.5 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full bg-[#131313]/85 backdrop-blur-2xl border border-white/20 mb-5 sm:mb-7 text-xs sm:text-sm uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#f0a500] font-semibold shadow-2xl shadow-black/60 ring-1 ring-white/10 hover:border-[#f0a500]/50 transition-all">
-                <ShieldCheck size={18} className="text-[#f0a500] flex-shrink-0" />
-                <span>Premier Chauffeur Services in Italy</span>
+              <div className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#131313]/85 backdrop-blur-2xl border border-white/20 mb-5 sm:mb-7 text-[11px] sm:text-xs md:text-sm uppercase tracking-wider sm:tracking-[0.2em] text-[#f0a500] font-semibold max-w-[94vw] shadow-2xl shadow-black/60 ring-1 ring-white/10 hover:border-[#f0a500]/50 transition-all">
+                <ShieldCheck size={16} className="text-[#f0a500] flex-shrink-0" />
+                <span className="truncate">Premier Chauffeur Services in Italy</span>
               </div>
               <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-glow max-w-5xl tracking-tight text-white leading-tight">
                 Excellence in Every Kilometre
@@ -908,7 +908,7 @@ export default function App() {
         </section>
 
         {/* Contact Us Section */}
-        <section id="contact" className="py-20 sm:py-28 px-4 sm:px-8 md:px-16 max-w-[1440px] mx-auto w-full relative">
+        <section id="contact" className="py-20 sm:py-28 px-4 sm:px-8 md:px-16 max-w-[1440px] mx-auto w-full relative overflow-hidden">
           {/* Subtle Ambient Lighting */}
           <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#f0a500]/5 rounded-full blur-[140px] pointer-events-none -z-10"></div>
           <div className="absolute bottom-10 left-0 w-[400px] h-[400px] bg-[#f0a500]/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
