@@ -1,3 +1,7 @@
+import tariffsData from './data/tariffs.json';
+
+export { tariffsData };
+
 const predefinedRoutes: any = {
   // Milan <-> Malpensa (Minibus 10 pax: 240)
   "milan-malpensa": { Standard: 91, Business: 112, Luxury: 258, "Standard Van": 112, "Business Van": 123, "Business Van Plus": 140, "Minibus 10 pax": 240 },
@@ -24,7 +28,10 @@ const predefinedRoutes: any = {
   "linate-bergamo": { Standard: 110, Business: 130, Luxury: 220, "Standard Van": 130, "Business Van": 145, "Business Van Plus": 150, "Minibus 10 pax": 270 }
 };
 
-const normalizeKey = (str: string) => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const normalizeKey = (str: any) => {
+  if (typeof str !== 'string') return '';
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+};
 
 const fixedSpecialRoutesRaw: any = {
   "malpensa-tasch": { Business: 450, "Business Van": 450, "Business Van Plus": 450, Luxury: 600, "Minibus 10 pax": 600 },
@@ -63,14 +70,115 @@ for (const route in fixedSpecialRoutesRaw) {
 
 const rates: any = { Standard: 0.6, Business: 0.8, Luxury: 1.5, "Standard Van": 0.8, "Business Van": 0.9, "Business Van Plus": 1.0, "Minibus 10 pax": 1.2 };
 
-const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina"];
+const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina", "cervinia", "chervinia", "cortina", "courmayeur", "cormajor", "cormayeur", "campiglio", "sestriere", "gardena", "ortisei"];
 
 const surchargedPlaces: any = {
   "como": { Standard: 80, Business: 100, "Business Van": 110, "Standard Van": 80, "Business Van Plus": 130, Luxury: 100, "Minibus 10 pax": 100 },
   "villa d'este": { Standard: 90, Business: 120, "Business Van": 130, "Standard Van": 90, "Business Van Plus": 150, Luxury: 120, "Minibus 10 pax": 120 }
 };
 
-const matchPredefinedRoute = (fromStr: string, toStr: string) => {
+/**
+ * Robust detection of origin hub (Milan city center, Malpensa, Linate, Bergamo).
+ * Supports any casing, accents, Cyrillic, typos, extra whitespace.
+ */
+export const detectOrigin = (raw: any): "milan" | "malpensa" | "linate" | "bergamo" | null => {
+  if (typeof raw !== 'string') return null;
+  const s = raw.toLowerCase().trim();
+  if (!s) return null;
+
+  if (s.includes("malpensa") || s.includes("mxp") || s.includes("мальпенса")) return "malpensa";
+  if (s.includes("linate") || s.includes("lin") || s.includes("лінате") || s.includes("ленате")) return "linate";
+  if (s.includes("bergamo") || s.includes("bgy") || s.includes("orio") || s.includes("caravaggio") || s.includes("бергамо") || s.includes("оріо")) return "bergamo";
+  if (s.includes("milan") || s.includes("milano") || s.includes("мілан") || s.includes("милан")) return "milan";
+  return null;
+};
+
+/**
+ * Robust detection of ski destination (Cervinia, Cortina, Courmayeur, Madonna di Campiglio, Sestriere, Val Gardena).
+ * Supports any casing, accents, Cyrillic, transliterations (e.g. chervinia, cormajor), typos, extra whitespace.
+ */
+export const detectDestination = (raw: any): "cervinia" | "cortina_dampezzo" | "courmayeur" | "madonna_di_campiglio" | "sestriere" | "val_gardena" | null => {
+  if (typeof raw !== 'string') return null;
+  const s = raw.toLowerCase().trim();
+  if (!s) return null;
+
+  if (s.includes("cervinia") || s.includes("chervinia") || s.includes("червінія") || s.includes("червиния") || s.includes("breuil")) return "cervinia";
+  if (s.includes("cortina") || s.includes("ampezzo") || s.includes("кортіна") || s.includes("кортина")) return "cortina_dampezzo";
+  if (s.includes("courmayeur") || s.includes("cormajor") || s.includes("cormayeur") || s.includes("curmayeur") || s.includes("кормайор") || s.includes("курмайор")) return "courmayeur";
+  if (s.includes("campiglio") || s.includes("madonna") || s.includes("кампільйо") || s.includes("мадонна")) return "madonna_di_campiglio";
+  if (s.includes("sestriere") || s.includes("sestrieres") || s.includes("сестрієре") || s.includes("сестриере")) return "sestriere";
+  if (s.includes("gardena") || s.includes("ortisei") || s.includes("selva") || s.includes("гардена") || s.includes("ортізеї")) return "val_gardena";
+  return null;
+};
+
+/**
+ * Static distance & duration info for all 24 fixed ski route pairings
+ */
+export const skiRoutesDistanceDuration: Record<string, Record<string, { distanceText: string; distanceKm: number; durationText: string; durationSec: number }>> = {
+  milan: {
+    cervinia: { distanceText: "190 km", distanceKm: 190, durationText: "2 hr 30 mins", durationSec: 9000 },
+    cortina_dampezzo: { distanceText: "410 km", distanceKm: 410, durationText: "4 hr 30 mins", durationSec: 16200 },
+    courmayeur: { distanceText: "220 km", distanceKm: 220, durationText: "2 hr 40 mins", durationSec: 9600 },
+    madonna_di_campiglio: { distanceText: "230 km", distanceKm: 230, durationText: "3 hr 30 mins", durationSec: 12600 },
+    sestriere: { distanceText: "235 km", distanceKm: 235, durationText: "2 hr 50 mins", durationSec: 10200 },
+    val_gardena: { distanceText: "325 km", distanceKm: 325, durationText: "3 hr 45 mins", durationSec: 13500 },
+  },
+  malpensa: {
+    cervinia: { distanceText: "180 km", distanceKm: 180, durationText: "2 hr 15 mins", durationSec: 8100 },
+    cortina_dampezzo: { distanceText: "450 km", distanceKm: 450, durationText: "4 hr 50 mins", durationSec: 17400 },
+    courmayeur: { distanceText: "210 km", distanceKm: 210, durationText: "2 hr 20 mins", durationSec: 8400 },
+    madonna_di_campiglio: { distanceText: "270 km", distanceKm: 270, durationText: "3 hr 50 mins", durationSec: 13800 },
+    sestriere: { distanceText: "240 km", distanceKm: 240, durationText: "2 hr 45 mins", durationSec: 9900 },
+    val_gardena: { distanceText: "365 km", distanceKm: 365, durationText: "4 hr 00 mins", durationSec: 14400 },
+  },
+  linate: {
+    cervinia: { distanceText: "200 km", distanceKm: 200, durationText: "2 hr 40 mins", durationSec: 9600 },
+    cortina_dampezzo: { distanceText: "410 km", distanceKm: 410, durationText: "4 hr 30 mins", durationSec: 16200 },
+    courmayeur: { distanceText: "230 km", distanceKm: 230, durationText: "2 hr 50 mins", durationSec: 10200 },
+    madonna_di_campiglio: { distanceText: "230 km", distanceKm: 230, durationText: "3 hr 30 mins", durationSec: 12600 },
+    sestriere: { distanceText: "245 km", distanceKm: 245, durationText: "3 hr 00 mins", durationSec: 10800 },
+    val_gardena: { distanceText: "325 km", distanceKm: 325, durationText: "3 hr 45 mins", durationSec: 13500 },
+  },
+  bergamo: {
+    cervinia: { distanceText: "235 km", distanceKm: 235, durationText: "3 hr 00 mins", durationSec: 10800 },
+    cortina_dampezzo: { distanceText: "370 km", distanceKm: 370, durationText: "4 hr 00 mins", durationSec: 14400 },
+    courmayeur: { distanceText: "265 km", distanceKm: 265, durationText: "3 hr 10 mins", durationSec: 11400 },
+    madonna_di_campiglio: { distanceText: "180 km", distanceKm: 180, durationText: "2 hr 45 mins", durationSec: 9900 },
+    sestriere: { distanceText: "280 km", distanceKm: 280, durationText: "3 hr 20 mins", durationSec: 12000 },
+    val_gardena: { distanceText: "280 km", distanceKm: 280, durationText: "3 hr 15 mins", durationSec: 11700 },
+  }
+};
+
+/**
+ * Match fixed ski destinations table (Milan, Malpensa, Linate, Bergamo <-> Cervinia, Cortina, Courmayeur, Madonna di Campiglio, Sestriere, Val Gardena)
+ * Returns the higher (+15% / calc) prices directly for calculation.
+ */
+export const matchSkiFixedRoute = (fromStr: any, toStr: any) => {
+  if (!fromStr || !toStr) return null;
+
+  let origin = detectOrigin(fromStr);
+  let dest = detectDestination(toStr);
+
+  // If not matched directly, check reverse direction (e.g. Courmayeur -> Malpensa)
+  if (!origin || !dest) {
+    origin = detectOrigin(toStr);
+    dest = detectDestination(fromStr);
+  }
+
+  if (origin && dest && (tariffsData.tables as any)[origin]?.destinations?.[dest]) {
+    const pricesObj = (tariffsData.tables as any)[origin].destinations[dest].prices;
+    const displayPrices: Record<string, number> = {};
+    for (const carType in pricesObj) {
+      displayPrices[carType] = pricesObj[carType].calc;
+    }
+    return displayPrices;
+  }
+
+  return null;
+};
+
+const matchPredefinedRoute = (fromStr: any, toStr: any) => {
+  if (typeof fromStr !== 'string' || typeof toStr !== 'string') return null;
   const f = fromStr.toLowerCase();
   const t = toStr.toLowerCase();
 
@@ -82,47 +190,56 @@ const matchPredefinedRoute = (fromStr: string, toStr: string) => {
   if ((isMilan(f) && isMalpensa(t)) || (isMalpensa(f) && isMilan(t))) return predefinedRoutes["milan-malpensa"];
   if ((isMilan(f) && isBergamo(t)) || (isBergamo(f) && isMilan(t))) return predefinedRoutes["milan-bergamo"];
   if ((isMilan(f) && isLinate(t)) || (isLinate(f) && isMilan(t))) return predefinedRoutes["milan-linate"];
-  if ((isMalpensa(f) && isLinate(t)) || (isLinate(f) && isMalpensa(t))) return predefinedRoutes["malpensa-linate"];
-  if ((isMalpensa(f) && isBergamo(t)) || (isBergamo(f) && isMalpensa(t))) return predefinedRoutes["malpensa-bergamo"];
+  if ((isMalpensa(f) && isLinate(t)) || (isLinate(f) && isMilan(t))) return predefinedRoutes["malpensa-linate"];
+  if ((isMalpensa(f) && isBergamo(t)) || (isBergamo(f) && isMilan(t))) return predefinedRoutes["malpensa-bergamo"];
   if ((isLinate(f) && isBergamo(t)) || (isBergamo(f) && isLinate(t))) return predefinedRoutes["linate-bergamo"];
 
   return null;
 };
 
 // Pricing calculation logic
-export const calculateTransferPrices = (from: string, to: string, distance: number) => {
-    const routeKey = `${normalizeKey(from)}-${normalizeKey(to)}`;
+export const calculateTransferPrices = (from: any, to: any, distance: number) => {
+    const safeFrom = typeof from === 'string' ? from.trim() : '';
+    const safeTo = typeof to === 'string' ? to.trim() : '';
+
+    // 1. Check Fixed Ski Resort Routes from the official PDF table (uses +15% calc price directly)
+    const skiPrices = matchSkiFixedRoute(safeFrom, safeTo);
+    if (skiPrices) {
+        return { prices: skiPrices, formatSpecial: true };
+    }
+
+    const routeKey = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
     
-    // 1. Check Fixed Special Alpine Routes
+    // 2. Check Fixed Special Alpine Routes (Täsch, St. Moritz, Pontresina)
     if (fixedSpecialRoutes[routeKey]) {
         return { prices: fixedSpecialRoutes[routeKey], formatSpecial: true };
     }
 
-    const fromLower = from.toLowerCase();
-    const toLower = to.toLowerCase();
+    const fromLower = safeFrom.toLowerCase();
+    const toLower = safeTo.toLowerCase();
     const isSpecial = specialPlaces.some((place) => fromLower.includes(place) || toLower.includes(place));
     
-    // 2. Check Predefined Italian Airport Routes from Table
-    const predefined = matchPredefinedRoute(from, to);
+    // 3. Check Predefined Italian Airport Routes from Table
+    const predefined = matchPredefinedRoute(safeFrom, safeTo);
     if (predefined) {
         return { prices: predefined, formatSpecial: isSpecial };
     }
 
-    const routeKey1 = `${normalizeKey(from)}-${normalizeKey(to)}`;
-    const routeKey2 = `${normalizeKey(to)}-${normalizeKey(from)}`;
+    const routeKey1 = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
+    const routeKey2 = `${normalizeKey(safeTo)}-${normalizeKey(safeFrom)}`;
     if (predefinedRoutes[routeKey1]) return { prices: predefinedRoutes[routeKey1], formatSpecial: isSpecial };
     if (predefinedRoutes[routeKey2]) return { prices: predefinedRoutes[routeKey2], formatSpecial: isSpecial };
 
-    // 3. General Distance-Based Calculation
+    // 4. General Distance-Based Calculation
     const airportList = ["malpensa", "bergamo", "linate", "caravaggio"];
     let finalDistance: number;
     
     const isSurcharged = Object.keys(surchargedPlaces).some(place => fromLower.includes(place) || toLower.includes(place));
     
     if (isSurcharged) {
-      finalDistance = distance * 2 + 20;
+      finalDistance = (Number(distance) || 45) * 2 + 20;
     } else {
-      const doubledDistance = distance * 2;
+      const doubledDistance = (Number(distance) || 45) * 2;
       if (fromLower.includes("linate") || toLower.includes("linate")) {
         finalDistance = doubledDistance + 10;
       } else if (airportList.some((airport) => fromLower.includes(airport) || toLower.includes(airport))) {
@@ -139,7 +256,7 @@ export const calculateTransferPrices = (from: string, to: string, distance: numb
         basePrice *= 1.1;
       }
       let priceWithVat = basePrice * 1.12;
-      calculatedPrices[key] = priceWithVat;
+      calculatedPrices[key] = Math.round(priceWithVat);
     }
     
     return { prices: calculatedPrices, formatSpecial: isSpecial };

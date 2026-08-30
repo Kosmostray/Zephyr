@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef, FormEvent } from 'react';
+import React, { useState, useRef, useEffect, FormEvent } from 'react';
 import { 
   MapPin, 
   Navigation, 
@@ -26,6 +26,12 @@ import {
   Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { 
+  detectOrigin, 
+  detectDestination, 
+  skiRoutesDistanceDuration, 
+  calculateTransferPrices 
+} from './pricing';
 
 export default function App() {
   const [from, setFrom] = useState('');
@@ -90,6 +96,12 @@ export default function App() {
     "Milan Linate Airport (LIN)",
     "Bergamo Airport (BGY)",
     "Milan City Center",
+    "Courmayeur",
+    "Cervinia",
+    "Cortina d'Ampezzo",
+    "Madonna di Campiglio",
+    "Sestriere",
+    "Val Gardena",
     "Lake Como (Bellagio)",
     "Lake Como (Tremezzo)",
     "St. Moritz, Switzerland",
@@ -100,96 +112,141 @@ export default function App() {
     "Genoa Port"
   ];
 
-  const handleCalculate = async () => {
-    if (!from || !to) return;
+  const handleCalculate = async (overrideFrom?: any, overrideTo?: any) => {
+    // Robustly ensure origin and destination are strings, ignoring any event objects passed by click handlers
+    const originLocation = (typeof overrideFrom === 'string' && overrideFrom.trim())
+      ? overrideFrom.trim() 
+      : (typeof from === 'string' ? from.trim() : '');
+      
+    const destLocation = (typeof overrideTo === 'string' && overrideTo.trim())
+      ? overrideTo.trim() 
+      : (typeof to === 'string' ? to.trim() : '');
+
+    if (!originLocation || !destLocation) return;
     setLoading(true);
     setBookingConfirmed(null);
 
     try {
-      const fromLower = from.toLowerCase();
-      const toLower = to.toLowerCase();
-
       let element: any = null;
       let distanceValue = 0;
 
-      // Static estimates for popular airport & city pairings
-      if ((fromLower.includes('milan') && toLower.includes('malpensa')) || (fromLower.includes('malpensa') && toLower.includes('milan'))) {
-        element = { distance: { text: "45.1 km", value: 45100 }, duration: { text: "42 mins", value: 2520 } };
-        distanceValue = 45.1;
-      } else if ((fromLower.includes('milan') && toLower.includes('linate')) || (fromLower.includes('linate') && toLower.includes('milan'))) {
-        element = { distance: { text: "11.8 km", value: 11800 }, duration: { text: "25 mins", value: 1500 } };
-        distanceValue = 11.8;
-      } else if ((fromLower.includes('milan') && toLower.includes('bergamo')) || (fromLower.includes('bergamo') && toLower.includes('milan'))) {
-        element = { distance: { text: "52.4 km", value: 52400 }, duration: { text: "50 mins", value: 3000 } };
-        distanceValue = 52.4;
-      } else if ((fromLower.includes('malpensa') && toLower.includes('linate')) || (fromLower.includes('linate') && toLower.includes('malpensa'))) {
-        element = { distance: { text: "58.0 km", value: 58000 }, duration: { text: "50 mins", value: 3000 } };
-        distanceValue = 58.0;
-      } else if ((fromLower.includes('malpensa') && toLower.includes('bergamo')) || (fromLower.includes('bergamo') && toLower.includes('malpensa'))) {
-        element = { distance: { text: "91.2 km", value: 91200 }, duration: { text: "1 hr 15 mins", value: 4500 } };
-        distanceValue = 91.2;
-      } else if ((fromLower.includes('linate') && toLower.includes('bergamo')) || (fromLower.includes('bergamo') && toLower.includes('linate'))) {
-        element = { distance: { text: "48.5 km", value: 48500 }, duration: { text: "45 mins", value: 2700 } };
-        distanceValue = 48.5;
-      } else if ((fromLower.includes('milan') && toLower.includes('como')) || (fromLower.includes('como') && toLower.includes('milan'))) {
-        element = { distance: { text: "51.0 km", value: 51000 }, duration: { text: "55 mins", value: 3300 } };
-        distanceValue = 51.0;
-      } else if ((fromLower.includes('florence') && toLower.includes('tuscany')) || (fromLower.includes('tuscany') && toLower.includes('florence'))) {
-        element = { distance: { text: "68.2 km", value: 68200 }, duration: { text: "1 hr 10 mins", value: 4200 } };
-        distanceValue = 68.2;
-      } else if (fromLower.includes('rome') && toLower.includes('rome')) {
-        element = { distance: { text: "32.0 km", value: 32000 }, duration: { text: "35 mins", value: 2100 } };
-        distanceValue = 32.0;
-      } else {
-        // Try backend proxy if available
-        try {
-          const improve = (loc: string) => {
-            if (loc.toLowerCase().trim() === 'milan') return 'Milan, Metropolitan City of Milan, Italy';
-            if (['rome', 'venice', 'florence', 'naples'].includes(loc.toLowerCase().trim())) return `${loc}, Italy`;
-            return loc;
-          };
-          const response = await fetch("/api/distance", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ origin: improve(from), destination: improve(to) })
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]?.status === 'OK') {
-              element = data.rows[0].elements[0];
-              distanceValue = element.distance.value / 1000;
-            }
-          }
-        } catch {
-          // Backend not reachable (e.g. static GitHub Pages demo)
-        }
+      // 1. Check if matches any of the 24 fixed ski resort routes (casing, typo, Cyrillic insensitive)
+      const orig = detectOrigin(originLocation) || detectOrigin(destLocation);
+      const dest = detectDestination(destLocation) || detectDestination(originLocation);
 
-        // Graceful fallback estimate for demo testing
-        if (!element) {
-          element = {
-            distance: { text: "45.0 km", value: 45000 },
-            duration: { text: "45 mins", value: 2700 }
-          };
-          distanceValue = 45.0;
+      if (orig && dest && skiRoutesDistanceDuration[orig]?.[dest]) {
+        const routeInfo = skiRoutesDistanceDuration[orig][dest];
+        element = {
+          distance: { text: routeInfo.distanceText, value: routeInfo.distanceKm * 1000 },
+          duration: { text: routeInfo.durationText, value: routeInfo.durationSec }
+        };
+        distanceValue = routeInfo.distanceKm;
+      } else {
+        const fromLower = originLocation.toLowerCase();
+        const toLower = destLocation.toLowerCase();
+        const matches = (a: string, b: string) => 
+          (fromLower.includes(a) && toLower.includes(b)) || (fromLower.includes(b) && toLower.includes(a));
+
+        // 2. Static estimates for popular airport & city pairings
+        if (matches('milan', 'malpensa')) {
+          element = { distance: { text: "45.1 km", value: 45100 }, duration: { text: "42 mins", value: 2520 } };
+          distanceValue = 45.1;
+        } else if (matches('milan', 'linate')) {
+          element = { distance: { text: "11.8 km", value: 11800 }, duration: { text: "25 mins", value: 1500 } };
+          distanceValue = 11.8;
+        } else if (matches('milan', 'bergamo')) {
+          element = { distance: { text: "52.4 km", value: 52400 }, duration: { text: "50 mins", value: 3000 } };
+          distanceValue = 52.4;
+        } else if (matches('malpensa', 'linate')) {
+          element = { distance: { text: "58.0 km", value: 58000 }, duration: { text: "50 mins", value: 3000 } };
+          distanceValue = 58.0;
+        } else if (matches('malpensa', 'bergamo')) {
+          element = { distance: { text: "91.2 km", value: 91200 }, duration: { text: "1 hr 15 mins", value: 4500 } };
+          distanceValue = 91.2;
+        } else if (matches('linate', 'bergamo')) {
+          element = { distance: { text: "48.5 km", value: 48500 }, duration: { text: "45 mins", value: 2700 } };
+          distanceValue = 48.5;
+        } else if (matches('milan', 'como')) {
+          element = { distance: { text: "51.0 km", value: 51000 }, duration: { text: "55 mins", value: 3300 } };
+          distanceValue = 51.0;
+        } else if (matches('florence', 'tuscany')) {
+          element = { distance: { text: "68.2 km", value: 68200 }, duration: { text: "1 hr 10 mins", value: 4200 } };
+          distanceValue = 68.2;
+        } else if (fromLower.includes('rome') && toLower.includes('rome')) {
+          element = { distance: { text: "32.0 km", value: 32000 }, duration: { text: "35 mins", value: 2100 } };
+          distanceValue = 32.0;
+        } else {
+          // Try backend proxy if available
+          try {
+            const improve = (loc: string) => {
+              if (loc.toLowerCase().trim() === 'milan') return 'Milan, Metropolitan City of Milan, Italy';
+              if (['rome', 'venice', 'florence', 'naples'].includes(loc.toLowerCase().trim())) return `${loc}, Italy`;
+              return loc;
+            };
+            const response = await fetch("/api/distance", {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ origin: improve(originLocation), destination: improve(destLocation) })
+            });
+            if (response.ok) {
+              const data = await response.json();
+              if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]?.status === 'OK') {
+                element = data.rows[0].elements[0];
+                distanceValue = element.distance.value / 1000;
+              }
+            }
+          } catch {
+            // Backend not reachable (e.g. static demo)
+          }
+
+          // Graceful fallback estimate for testing
+          if (!element) {
+            element = {
+              distance: { text: "45.0 km", value: 45000 },
+              duration: { text: "45 mins", value: 2700 }
+            };
+            distanceValue = 45.0;
+          }
         }
       }
       
-      // Calculate prices using local logic
-      const { calculateTransferPrices } = await import('./pricing');
-      const priceResult = calculateTransferPrices(from, to, distanceValue);
+      const priceResult = calculateTransferPrices(originLocation, destLocation, distanceValue);
       
       setResult({
-        distance: element.distance.text,
-        duration: element.duration.text,
+        distance: element?.distance?.text || "45.0 km",
+        duration: element?.duration?.text || "45 mins",
         prices: priceResult.prices,
         formatSpecial: priceResult.formatSpecial
       });
     } catch (e) {
-      alert("Error calculating quote: " + e);
+      console.error("Quote calculation error:", e);
     } finally {
       setLoading(false);
     }
   };
+
+  // Check URL query parameters (e.g. from Google Ads: ?from=Malpensa&to=Courmayeur)
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const urlFrom = searchParams.get('from');
+      const urlTo = searchParams.get('to');
+      const urlPassengers = searchParams.get('passengers');
+
+      if (urlFrom) setFrom(urlFrom);
+      if (urlTo) setTo(urlTo);
+      if (urlPassengers) setPassengers(Number(urlPassengers) || 1);
+
+      if (urlFrom && urlTo) {
+        handleCalculate(urlFrom, urlTo);
+        setTimeout(() => {
+          calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    } catch (e) {
+      console.warn("Could not parse query params", e);
+    }
+  }, []);
 
   const scrollToCalculator = () => {
     calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -438,7 +495,7 @@ export default function App() {
                       </div>
 
                       <button
-                        onClick={handleCalculate}
+                        onClick={() => handleCalculate()}
                         disabled={!from || !to || loading}
                         className="bg-[#f0a500] hover:bg-[#d99400] text-[#131313] h-[48px] md:h-[50px] rounded-xl font-bold text-xs uppercase tracking-wider amber-glow transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#f0a500]/20"
                       >

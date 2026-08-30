@@ -1,0 +1,324 @@
+{
+  "currency": "EUR",
+  "vat_included": true,
+  "description": "Італія — Тарифи трансферів (База / +15%)",
+  "rates_multiplier": {
+    "Standard": 0.65,
+    "Business": 0.8,
+    "Luxury": 1.6,
+    "Standard Van": 0.8,
+    "Business Van": 0.9,
+    "Business Van Plus": 1.0,
+    "Minibus 10 pax": 1.5
+  },
+  "tables": {
+    "milan": {
+      "name": "Мілан",
+      "destinations": {
+        "cervinia": {
+          "name": "Cervinia",
+          "prices": {
+            "Standard": { "base": 244, "calc": 281 },
+            "Business": { "base": 301, "calc": 346 },
+            "Luxury": { "base": 602, "calc": 692 },
+            "Standard Van": { "base": 301, "calc": 346 },
+            "Business Van": { "base": 338, "calc": 389 },
+            "Business Van Plus": { "base": 376, "calc": 432 },
+            "Minibus 10 pax": { "base": 564, "calc": 649 }
+          }
+        },
+        "cortina_dampezzo": {
+          "name": "Cortina d'Ampezzo",
+          "prices": {
+            "Standard": { "base": 534, "calc": 614 },
+            "Business": { "base": 657, "calc": 755 },
+            "Luxury": { "base": 1314, "calc": 1511 },
+            "Standard Van": { "base": 657, "calc": 755 },
+            "Business Van": { "base": 739, "calc": 850 },
+            "Business Van Plus": { "base": 821, "calc": 944 },
+            "Minibus 10 pax": { "base": 1232, "calc": 1416 }
+          }
+        },
+        "courmayeur": {
+          "name": "Courmayeur",
+          "prices": {
+            "Standard": { "base": 282, "calc": 324 },
+            "Business": { "base": 347, "calc": 399 },
+            "Luxury": { "base": 694, "calc": 799 },
+            "Standard Van": { "base": 347, "calc": 399 },
+            "Business Van": { "base": 391, "calc": 449 },
+            "Business Van Plus": { "base": 434, "calc": 499 },
+            "Minibus 10 pax": { "base": 651, "calc": 749 }
+          }
+        },
+        "madonna_di_campiglio": {
+          "name": "Madonna di Campiglio",
+          "prices": {
+            "Standard": { "base": 296, "calc": 341 },
+            "Business": { "base": 365, "calc": 420 },
+            "Luxury": { "base": 730, "calc": 839 },
+            "Standard Van": { "base": 365, "calc": 420 },
+            "Business Van": { "base": 410, "calc": 472 },
+            "Business Van Plus": { "base": 456, "calc": 524 },
+            "Minibus 10 pax": { "base": 684, "calc": 787 }
+          }
+        },
+        "sestriere": {
+          "name": "Sestriere",
+          "prices": {
+            "Standard": { "base": 307, "calc": 353 },
+            "Business": { "base": 378, "calc": 434 },
+            "Luxury": { "base": 755, "calc": 868 },
+            "Standard Van": { "base": 378, "calc": 434 },
+            "Business Van": { "base": 425, "calc": 489 },
+            "Business Van Plus": { "base": 472, "calc": 543 },
+            "Minibus 10 pax": { "base": 708, "calc": 814 }
+          }
+        },
+        "val_gardena": {
+          "name": "Val Gardena",
+          "prices": {
+            "Standard": { "base": 421, "calc": 484 },
+            "Business": { "base": 518, "calc": 596 },
+            "Luxury": { "base": 1037, "calc": 1192 },
+            "Standard Van": { "base": 518, "calc": 596 },
+            "Business Van": { "base": 583, "calc": 671 },
+            "Business Van Plus": { "base": 648, "calc": 745 },
+            "Minibus 10 pax": { "base": 972, "calc": 1118 }
+          }
+        }
+      }
+    },
+    "malpensa": {
+      "name": "Мальпенса",
+      "destinations": {
+        "cervinia": {
+          "name": "Cervinia",
+          "prices": {
+            "Standard": { "base": 272, "calc": 312 },
+            "Business": { "base": 334, "calc": 385 },
+            "Luxury": { "base": 669, "calc": 769 },
+            "Standard Van": { "base": 334, "calc": 385 },
+            "Business Van": { "base": 376, "calc": 433 },
+            "Business Van Plus": { "base": 418, "calc": 481 },
+            "Minibus 10 pax": { "base": 627, "calc": 721 }
+          }
+        },
+        "cortina_dampezzo": {
+          "name": "Cortina d'Ampezzo",
+          "prices": {
+            "Standard": { "base": 581, "calc": 668 },
+            "Business": { "base": 715, "calc": 822 },
+            "Luxury": { "base": 1430, "calc": 1645 },
+            "Standard Van": { "base": 715, "calc": 822 },
+            "Business Van": { "base": 805, "calc": 925 },
+            "Business Van Plus": { "base": 894, "calc": 1028 },
+            "Minibus 10 pax": { "base": 1341, "calc": 1542 }
+          }
+        },
+        "courmayeur": {
+          "name": "Courmayeur",
+          "prices": {
+            "Standard": { "base": 310, "calc": 357 },
+            "Business": { "base": 382, "calc": 439 },
+            "Luxury": { "base": 763, "calc": 878 },
+            "Standard Van": { "base": 382, "calc": 439 },
+            "Business Van": { "base": 429, "calc": 494 },
+            "Business Van Plus": { "base": 477, "calc": 549 },
+            "Minibus 10 pax": { "base": 716, "calc": 823 }
+          }
+        },
+        "madonna_di_campiglio": {
+          "name": "Madonna di Campiglio",
+          "prices": {
+            "Standard": { "base": 345, "calc": 396 },
+            "Business": { "base": 424, "calc": 488 },
+            "Luxury": { "base": 848, "calc": 975 },
+            "Standard Van": { "base": 424, "calc": 488 },
+            "Business Van": { "base": 477, "calc": 549 },
+            "Business Van Plus": { "base": 530, "calc": 610 },
+            "Minibus 10 pax": { "base": 795, "calc": 914 }
+          }
+        },
+        "sestriere": {
+          "name": "Sestriere",
+          "prices": {
+            "Standard": { "base": 335, "calc": 385 },
+            "Business": { "base": 412, "calc": 474 },
+            "Luxury": { "base": 824, "calc": 948 },
+            "Standard Van": { "base": 412, "calc": 474 },
+            "Business Van": { "base": 464, "calc": 533 },
+            "Business Van Plus": { "base": 515, "calc": 592 },
+            "Minibus 10 pax": { "base": 773, "calc": 888 }
+          }
+        },
+        "val_gardena": {
+          "name": "Val Gardena",
+          "prices": {
+            "Standard": { "base": 469, "calc": 540 },
+            "Business": { "base": 578, "calc": 664 },
+            "Luxury": { "base": 1155, "calc": 1328 },
+            "Standard Van": { "base": 578, "calc": 664 },
+            "Business Van": { "base": 650, "calc": 747 },
+            "Business Van Plus": { "base": 722, "calc": 830 },
+            "Minibus 10 pax": { "base": 1083, "calc": 1245 }
+          }
+        }
+      }
+    },
+    "linate": {
+      "name": "Ленате (Linate)",
+      "destinations": {
+        "cervinia": {
+          "name": "Cervinia",
+          "prices": {
+            "Standard": { "base": 265, "calc": 304 },
+            "Business": { "base": 326, "calc": 374 },
+            "Luxury": { "base": 651, "calc": 749 },
+            "Standard Van": { "base": 326, "calc": 374 },
+            "Business Van": { "base": 366, "calc": 421 },
+            "Business Van Plus": { "base": 407, "calc": 468 },
+            "Minibus 10 pax": { "base": 611, "calc": 702 }
+          }
+        },
+        "cortina_dampezzo": {
+          "name": "Cortina d'Ampezzo",
+          "prices": {
+            "Standard": { "base": 537, "calc": 617 },
+            "Business": { "base": 661, "calc": 760 },
+            "Luxury": { "base": 1322, "calc": 1520 },
+            "Standard Van": { "base": 661, "calc": 760 },
+            "Business Van": { "base": 743, "calc": 855 },
+            "Business Van Plus": { "base": 826, "calc": 950 },
+            "Minibus 10 pax": { "base": 1239, "calc": 1425 }
+          }
+        },
+        "courmayeur": {
+          "name": "Courmayeur",
+          "prices": {
+            "Standard": { "base": 302, "calc": 348 },
+            "Business": { "base": 372, "calc": 428 },
+            "Luxury": { "base": 744, "calc": 856 },
+            "Standard Van": { "base": 372, "calc": 428 },
+            "Business Van": { "base": 419, "calc": 481 },
+            "Business Van Plus": { "base": 465, "calc": 535 },
+            "Minibus 10 pax": { "base": 698, "calc": 802 }
+          }
+        },
+        "madonna_di_campiglio": {
+          "name": "Madonna di Campiglio",
+          "prices": {
+            "Standard": { "base": 294, "calc": 338 },
+            "Business": { "base": 362, "calc": 416 },
+            "Luxury": { "base": 723, "calc": 832 },
+            "Standard Van": { "base": 362, "calc": 416 },
+            "Business Van": { "base": 407, "calc": 468 },
+            "Business Van Plus": { "base": 452, "calc": 520 },
+            "Minibus 10 pax": { "base": 678, "calc": 780 }
+          }
+        },
+        "sestriere": {
+          "name": "Sestriere",
+          "prices": {
+            "Standard": { "base": 327, "calc": 376 },
+            "Business": { "base": 402, "calc": 463 },
+            "Luxury": { "base": 805, "calc": 926 },
+            "Standard Van": { "base": 402, "calc": 463 },
+            "Business Van": { "base": 453, "calc": 521 },
+            "Business Van Plus": { "base": 503, "calc": 578 },
+            "Minibus 10 pax": { "base": 755, "calc": 868 }
+          }
+        },
+        "val_gardena": {
+          "name": "Val Gardena",
+          "prices": {
+            "Standard": { "base": 425, "calc": 489 },
+            "Business": { "base": 523, "calc": 602 },
+            "Luxury": { "base": 1046, "calc": 1203 },
+            "Standard Van": { "base": 523, "calc": 602 },
+            "Business Van": { "base": 589, "calc": 677 },
+            "Business Van Plus": { "base": 654, "calc": 752 },
+            "Minibus 10 pax": { "base": 981, "calc": 1128 }
+          }
+        }
+      }
+    },
+    "bergamo": {
+      "name": "Бергамо",
+      "destinations": {
+        "cervinia": {
+          "name": "Cervinia",
+          "prices": {
+            "Standard": { "base": 309, "calc": 356 },
+            "Business": { "base": 381, "calc": 438 },
+            "Luxury": { "base": 762, "calc": 876 },
+            "Standard Van": { "base": 381, "calc": 438 },
+            "Business Van": { "base": 428, "calc": 493 },
+            "Business Van Plus": { "base": 476, "calc": 547 },
+            "Minibus 10 pax": { "base": 714, "calc": 821 }
+          }
+        },
+        "cortina_dampezzo": {
+          "name": "Cortina d'Ampezzo",
+          "prices": {
+            "Standard": { "base": 539, "calc": 620 },
+            "Business": { "base": 663, "calc": 763 },
+            "Luxury": { "base": 1326, "calc": 1525 },
+            "Standard Van": { "base": 663, "calc": 763 },
+            "Business Van": { "base": 746, "calc": 858 },
+            "Business Van Plus": { "base": 829, "calc": 953 },
+            "Minibus 10 pax": { "base": 1244, "calc": 1430 }
+          }
+        },
+        "courmayeur": {
+          "name": "Courmayeur",
+          "prices": {
+            "Standard": { "base": 348, "calc": 400 },
+            "Business": { "base": 428, "calc": 492 },
+            "Luxury": { "base": 856, "calc": 984 },
+            "Standard Van": { "base": 428, "calc": 492 },
+            "Business Van": { "base": 482, "calc": 554 },
+            "Business Van Plus": { "base": 535, "calc": 615 },
+            "Minibus 10 pax": { "base": 803, "calc": 923 }
+          }
+        },
+        "madonna_di_campiglio": {
+          "name": "Madonna di Campiglio",
+          "prices": {
+            "Standard": { "base": 302, "calc": 348 },
+            "Business": { "base": 372, "calc": 428 },
+            "Luxury": { "base": 744, "calc": 856 },
+            "Standard Van": { "base": 372, "calc": 428 },
+            "Business Van": { "base": 419, "calc": 481 },
+            "Business Van Plus": { "base": 465, "calc": 535 },
+            "Minibus 10 pax": { "base": 698, "calc": 802 }
+          }
+        },
+        "sestriere": {
+          "name": "Sestriere",
+          "prices": {
+            "Standard": { "base": 372, "calc": 428 },
+            "Business": { "base": 458, "calc": 527 },
+            "Luxury": { "base": 917, "calc": 1054 },
+            "Standard Van": { "base": 458, "calc": 527 },
+            "Business Van": { "base": 516, "calc": 593 },
+            "Business Van Plus": { "base": 573, "calc": 659 },
+            "Minibus 10 pax": { "base": 860, "calc": 988 }
+          }
+        },
+        "val_gardena": {
+          "name": "Val Gardena",
+          "prices": {
+            "Standard": { "base": 427, "calc": 491 },
+            "Business": { "base": 526, "calc": 605 },
+            "Luxury": { "base": 1051, "calc": 1209 },
+            "Standard Van": { "base": 526, "calc": 605 },
+            "Business Van": { "base": 591, "calc": 680 },
+            "Business Van Plus": { "base": 657, "calc": 756 },
+            "Minibus 10 pax": { "base": 986, "calc": 1133 }
+          }
+        }
+      }
+    }
+  }
+}
