@@ -34,14 +34,6 @@ const normalizeKey = (str: any) => {
 };
 
 const fixedSpecialRoutesRaw: any = {
-  "malpensa-tasch": { Business: 450, "Business Van": 450, "Business Van Plus": 450, Luxury: 600, "Minibus 10 pax": 600 },
-  "milan-tasch": { Business: 500, "Business Van": 500, "Business Van Plus": 500, Luxury: 700, "Minibus 10 pax": 700 },
-  "linate-tasch": { Business: 530, "Business Van": 530, "Business Van Plus": 530, Luxury: 750, "Minibus 10 pax": 750 },
-  "bergamo-tasch": { Business: 560, "Business Van": 560, "Business Van Plus": 560, Luxury: 800, "Minibus 10 pax": 800 },
-  "malpensa-st moritz": { Business: 450, "Business Van": 450, "Business Van Plus": 450, Luxury: 650, "Minibus 10 pax": 650 },
-  "milan-st moritz": { Business: 450, "Business Van": 450, "Business Van Plus": 450, Luxury: 600, "Minibus 10 pax": 600 },
-  "linate-st moritz": { Business: 480, "Business Van": 480, "Business Van Plus": 480, Luxury: 650, "Minibus 10 pax": 650 },
-  "bergamo-st moritz": { Business: 500, "Business Van": 500, "Business Van Plus": 500, Luxury: 650, "Minibus 10 pax": 650 },
   "malpensa-pontresina": { Business: 480, "Business Van": 480, "Business Van Plus": 480, Luxury: 700, "Minibus 10 pax": 700 },
   "milan-pontresina": { Business: 480, "Business Van": 480, "Business Van Plus": 480, Luxury: 650, "Minibus 10 pax": 650 },
   "linate-pontresina": { Business: 530, "Business Van": 530, "Business Van Plus": 530, Luxury: 700, "Minibus 10 pax": 700 },
@@ -60,17 +52,11 @@ for (const route in fixedSpecialRoutesRaw) {
     const inverseKeyNormalized = parts.slice(parts.length / 2).join('-') + '-' + parts.slice(0, parts.length / 2).join('-');
     fixedSpecialRoutes[primaryKeyNormalized] = pricesWithVat;
     fixedSpecialRoutes[inverseKeyNormalized] = pricesWithVat;
-    if (primaryKeyNormalized.includes('st-moritz')) {
-        const sanktKey = primaryKeyNormalized.replace('st-moritz', 'sankt-moritz');
-        const inverseSanktKey = inverseKeyNormalized.replace('st-moritz', 'sankt-moritz');
-        fixedSpecialRoutes[sanktKey] = pricesWithVat;
-        fixedSpecialRoutes[inverseSanktKey] = pricesWithVat;
-    }
 }
 
 const rates: any = { Standard: 0.6, Business: 0.8, Luxury: 1.5, "Standard Van": 0.8, "Business Van": 0.9, "Business Van Plus": 1.0, "Minibus 10 pax": 1.2 };
 
-const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina", "cervinia", "chervinia", "cortina", "courmayeur", "cormajor", "cormayeur", "campiglio", "sestriere", "gardena", "ortisei"];
+const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina", "cervinia", "chervinia", "cortina", "courmayeur", "cormajor", "cormayeur", "campiglio", "sestriere", "gardena", "ortisei", "alpbach", "ischgl", "kitzbuhel", "mayrhofen", "obergurgl", "saalbach", "solden", "soll", "anton", "champery", "tonale"];
 
 const surchargedPlaces: any = {
   "como": { Standard: 80, Business: 100, "Business Van": 110, "Standard Van": 80, "Business Van Plus": 130, Luxury: 100, "Minibus 10 pax": 100 },
@@ -94,25 +80,45 @@ export const detectOrigin = (raw: any): "milan" | "malpensa" | "linate" | "berga
 };
 
 /**
- * Robust detection of ski destination (Cervinia, Cortina, Courmayeur, Madonna di Campiglio, Sestriere, Val Gardena).
- * Supports any casing, accents, Cyrillic, transliterations (e.g. chervinia, cormajor), typos, extra whitespace.
+ * Robust detection of all 19 ski / resort destinations:
+ * Italy, Austria, and Switzerland.
+ * Supports any casing, accents, Cyrillic, transliterations, typos, extra whitespace.
  */
-export const detectDestination = (raw: any): "cervinia" | "cortina_dampezzo" | "courmayeur" | "madonna_di_campiglio" | "sestriere" | "val_gardena" | null => {
+export const detectDestination = (raw: any): string | null => {
   if (typeof raw !== 'string') return null;
   const s = raw.toLowerCase().trim();
   if (!s) return null;
 
+  // 1. Italian Ski Resorts
   if (s.includes("cervinia") || s.includes("chervinia") || s.includes("червінія") || s.includes("червиния") || s.includes("breuil")) return "cervinia";
   if (s.includes("cortina") || s.includes("ampezzo") || s.includes("кортіна") || s.includes("кортина")) return "cortina_dampezzo";
   if (s.includes("courmayeur") || s.includes("cormajor") || s.includes("cormayeur") || s.includes("curmayeur") || s.includes("кормайор") || s.includes("курмайор")) return "courmayeur";
   if (s.includes("campiglio") || s.includes("madonna") || s.includes("кампільйо") || s.includes("мадонна")) return "madonna_di_campiglio";
   if (s.includes("sestriere") || s.includes("sestrieres") || s.includes("сестрієре") || s.includes("сестриере")) return "sestriere";
   if (s.includes("gardena") || s.includes("ortisei") || s.includes("selva") || s.includes("гардена") || s.includes("ортізеї")) return "val_gardena";
+  if (s.includes("tonale") || s.includes("passo tonale") || s.includes("тонале")) return "passo_tonale";
+
+  // 2. Austria Ski Resorts
+  if (s.includes("alpbach") || s.includes("альпбах")) return "alpbach";
+  if (s.includes("ischgl") || s.includes("ішгль") || s.includes("ишгль")) return "ischgl";
+  if (s.includes("kitzbuhel") || s.includes("kitzbühel") || s.includes("kitzbuehel") || s.includes("кіцбюель") || s.includes("кицбюэль")) return "kitzbuhel";
+  if (s.includes("mayrhofen") || s.includes("майрхофен")) return "mayrhofen";
+  if (s.includes("obergurgl") || s.includes("gurgl") || s.includes("обергургль")) return "obergurgl";
+  if (s.includes("saalbach") || s.includes("hinterglemm") || s.includes("заальбах")) return "saalbach";
+  if (s.includes("solden") || s.includes("sölden") || s.includes("soelden") || s.includes("зельден") || s.includes("зьольден")) return "solden";
+  if (s.includes("soll") || s.includes("söll") || s.includes("soell") || s.includes("зьолль") || s.includes("зель")) return "soll";
+  if (s.includes("anton") || s.includes("st. anton") || s.includes("st anton") || s.includes("sankt anton") || s.includes("антон")) return "st_anton";
+
+  // 3. Switzerland / Alps Resorts
+  if (s.includes("champery") || s.includes("champéry") || s.includes("шампері") || s.includes("шампери")) return "champery";
+  if (s.includes("moritz") || s.includes("st. moritz") || s.includes("st moritz") || s.includes("sankt moritz") || s.includes("моріц") || s.includes("мориц")) return "st_moritz";
+  if (s.includes("zermatt") || s.includes("tasch") || s.includes("täsch") || s.includes("церматт") || s.includes("таш") || s.includes("теш")) return "zermatt";
+
   return null;
 };
 
 /**
- * Static distance & duration info for all 24 fixed ski route pairings
+ * Static distance & duration info for all 76 fixed ski route pairings (4 origins x 19 destinations)
  */
 export const skiRoutesDistanceDuration: Record<string, Record<string, { distanceText: string; distanceKm: number; durationText: string; durationSec: number }>> = {
   milan: {
@@ -122,6 +128,19 @@ export const skiRoutesDistanceDuration: Record<string, Record<string, { distance
     madonna_di_campiglio: { distanceText: "230 km", distanceKm: 230, durationText: "3 hr 30 mins", durationSec: 12600 },
     sestriere: { distanceText: "235 km", distanceKm: 235, durationText: "2 hr 50 mins", durationSec: 10200 },
     val_gardena: { distanceText: "325 km", distanceKm: 325, durationText: "3 hr 45 mins", durationSec: 13500 },
+    alpbach: { distanceText: "410 km", distanceKm: 410, durationText: "4 hr 30 mins", durationSec: 16200 },
+    ischgl: { distanceText: "320 km", distanceKm: 320, durationText: "4 hr 00 mins", durationSec: 14400 },
+    kitzbuhel: { distanceText: "440 km", distanceKm: 440, durationText: "4 hr 50 mins", durationSec: 17400 },
+    mayrhofen: { distanceText: "420 km", distanceKm: 420, durationText: "4 hr 35 mins", durationSec: 16500 },
+    obergurgl: { distanceText: "330 km", distanceKm: 330, durationText: "4 hr 10 mins", durationSec: 15000 },
+    saalbach: { distanceText: "490 km", distanceKm: 490, durationText: "5 hr 20 mins", durationSec: 19200 },
+    solden: { distanceText: "320 km", distanceKm: 320, durationText: "4 hr 00 mins", durationSec: 14400 },
+    soll: { distanceText: "420 km", distanceKm: 420, durationText: "4 hr 35 mins", durationSec: 16500 },
+    st_anton: { distanceText: "300 km", distanceKm: 300, durationText: "3 hr 45 mins", durationSec: 13500 },
+    champery: { distanceText: "260 km", distanceKm: 260, durationText: "3 hr 10 mins", durationSec: 11400 },
+    st_moritz: { distanceText: "160 km", distanceKm: 160, durationText: "2 hr 45 mins", durationSec: 9900 },
+    zermatt: { distanceText: "195 km", distanceKm: 195, durationText: "2 hr 45 mins", durationSec: 9900 },
+    passo_tonale: { distanceText: "170 km", distanceKm: 170, durationText: "2 hr 40 mins", durationSec: 9600 }
   },
   malpensa: {
     cervinia: { distanceText: "180 km", distanceKm: 180, durationText: "2 hr 15 mins", durationSec: 8100 },
@@ -130,6 +149,19 @@ export const skiRoutesDistanceDuration: Record<string, Record<string, { distance
     madonna_di_campiglio: { distanceText: "270 km", distanceKm: 270, durationText: "3 hr 50 mins", durationSec: 13800 },
     sestriere: { distanceText: "240 km", distanceKm: 240, durationText: "2 hr 45 mins", durationSec: 9900 },
     val_gardena: { distanceText: "365 km", distanceKm: 365, durationText: "4 hr 00 mins", durationSec: 14400 },
+    alpbach: { distanceText: "440 km", distanceKm: 440, durationText: "4 hr 45 mins", durationSec: 17100 },
+    ischgl: { distanceText: "350 km", distanceKm: 350, durationText: "4 hr 15 mins", durationSec: 15300 },
+    kitzbuhel: { distanceText: "470 km", distanceKm: 470, durationText: "5 hr 05 mins", durationSec: 18300 },
+    mayrhofen: { distanceText: "450 km", distanceKm: 450, durationText: "4 hr 50 mins", durationSec: 17400 },
+    obergurgl: { distanceText: "360 km", distanceKm: 360, durationText: "4 hr 25 mins", durationSec: 15900 },
+    saalbach: { distanceText: "520 km", distanceKm: 520, durationText: "5 hr 35 mins", durationSec: 20100 },
+    solden: { distanceText: "350 km", distanceKm: 350, durationText: "4 hr 15 mins", durationSec: 15300 },
+    soll: { distanceText: "450 km", distanceKm: 450, durationText: "4 hr 50 mins", durationSec: 17400 },
+    st_anton: { distanceText: "330 km", distanceKm: 330, durationText: "4 hr 00 mins", durationSec: 14400 },
+    champery: { distanceText: "250 km", distanceKm: 250, durationText: "2 hr 55 mins", durationSec: 10500 },
+    st_moritz: { distanceText: "185 km", distanceKm: 185, durationText: "2 hr 55 mins", durationSec: 10500 },
+    zermatt: { distanceText: "175 km", distanceKm: 175, durationText: "2 hr 25 mins", durationSec: 8700 },
+    passo_tonale: { distanceText: "200 km", distanceKm: 200, durationText: "3 hr 00 mins", durationSec: 10800 }
   },
   linate: {
     cervinia: { distanceText: "200 km", distanceKm: 200, durationText: "2 hr 40 mins", durationSec: 9600 },
@@ -138,6 +170,19 @@ export const skiRoutesDistanceDuration: Record<string, Record<string, { distance
     madonna_di_campiglio: { distanceText: "230 km", distanceKm: 230, durationText: "3 hr 30 mins", durationSec: 12600 },
     sestriere: { distanceText: "245 km", distanceKm: 245, durationText: "3 hr 00 mins", durationSec: 10800 },
     val_gardena: { distanceText: "325 km", distanceKm: 325, durationText: "3 hr 45 mins", durationSec: 13500 },
+    alpbach: { distanceText: "410 km", distanceKm: 410, durationText: "4 hr 30 mins", durationSec: 16200 },
+    ischgl: { distanceText: "320 km", distanceKm: 320, durationText: "4 hr 00 mins", durationSec: 14400 },
+    kitzbuhel: { distanceText: "440 km", distanceKm: 440, durationText: "4 hr 50 mins", durationSec: 17400 },
+    mayrhofen: { distanceText: "420 km", distanceKm: 420, durationText: "4 hr 35 mins", durationSec: 16500 },
+    obergurgl: { distanceText: "330 km", distanceKm: 330, durationText: "4 hr 10 mins", durationSec: 15000 },
+    saalbach: { distanceText: "490 km", distanceKm: 490, durationText: "5 hr 20 mins", durationSec: 19200 },
+    solden: { distanceText: "320 km", distanceKm: 320, durationText: "4 hr 00 mins", durationSec: 14400 },
+    soll: { distanceText: "420 km", distanceKm: 420, durationText: "4 hr 35 mins", durationSec: 16500 },
+    st_anton: { distanceText: "300 km", distanceKm: 300, durationText: "3 hr 45 mins", durationSec: 13500 },
+    champery: { distanceText: "270 km", distanceKm: 270, durationText: "3 hr 20 mins", durationSec: 12000 },
+    st_moritz: { distanceText: "165 km", distanceKm: 165, durationText: "2 hr 45 mins", durationSec: 9900 },
+    zermatt: { distanceText: "205 km", distanceKm: 205, durationText: "2 hr 55 mins", durationSec: 10500 },
+    passo_tonale: { distanceText: "170 km", distanceKm: 170, durationText: "2 hr 40 mins", durationSec: 9600 }
   },
   bergamo: {
     cervinia: { distanceText: "235 km", distanceKm: 235, durationText: "3 hr 00 mins", durationSec: 10800 },
@@ -146,11 +191,24 @@ export const skiRoutesDistanceDuration: Record<string, Record<string, { distance
     madonna_di_campiglio: { distanceText: "180 km", distanceKm: 180, durationText: "2 hr 45 mins", durationSec: 9900 },
     sestriere: { distanceText: "280 km", distanceKm: 280, durationText: "3 hr 20 mins", durationSec: 12000 },
     val_gardena: { distanceText: "280 km", distanceKm: 280, durationText: "3 hr 15 mins", durationSec: 11700 },
+    alpbach: { distanceText: "370 km", distanceKm: 370, durationText: "4 hr 00 mins", durationSec: 14400 },
+    ischgl: { distanceText: "290 km", distanceKm: 290, durationText: "3 hr 40 mins", durationSec: 13200 },
+    kitzbuhel: { distanceText: "400 km", distanceKm: 400, durationText: "4 hr 20 mins", durationSec: 15600 },
+    mayrhofen: { distanceText: "380 km", distanceKm: 380, durationText: "4 hr 05 mins", durationSec: 14700 },
+    obergurgl: { distanceText: "300 km", distanceKm: 300, durationText: "3 hr 45 mins", durationSec: 13500 },
+    saalbach: { distanceText: "450 km", distanceKm: 450, durationText: "4 hr 50 mins", durationSec: 17400 },
+    solden: { distanceText: "290 km", distanceKm: 290, durationText: "3 hr 35 mins", durationSec: 12900 },
+    soll: { distanceText: "380 km", distanceKm: 380, durationText: "4 hr 05 mins", durationSec: 14700 },
+    st_anton: { distanceText: "270 km", distanceKm: 270, durationText: "3 hr 25 mins", durationSec: 12300 },
+    champery: { distanceText: "305 km", distanceKm: 305, durationText: "3 hr 40 mins", durationSec: 13200 },
+    st_moritz: { distanceText: "155 km", distanceKm: 155, durationText: "2 hr 35 mins", durationSec: 9300 },
+    zermatt: { distanceText: "240 km", distanceKm: 240, durationText: "3 hr 15 mins", durationSec: 11700 },
+    passo_tonale: { distanceText: "120 km", distanceKm: 120, durationText: "2 hr 00 mins", durationSec: 7200 }
   }
 };
 
 /**
- * Match fixed ski destinations table (Milan, Malpensa, Linate, Bergamo <-> Cervinia, Cortina, Courmayeur, Madonna di Campiglio, Sestriere, Val Gardena)
+ * Match fixed ski destinations table (Milan, Malpensa, Linate, Bergamo <-> 19 resort destinations)
  * Returns the higher (+15% / calc) prices directly for calculation.
  */
 export const matchSkiFixedRoute = (fromStr: any, toStr: any) => {
@@ -159,7 +217,7 @@ export const matchSkiFixedRoute = (fromStr: any, toStr: any) => {
   let origin = detectOrigin(fromStr);
   let dest = detectDestination(toStr);
 
-  // If not matched directly, check reverse direction (e.g. Courmayeur -> Malpensa)
+  // If not matched directly, check reverse direction (e.g. Ischgl -> Malpensa)
   if (!origin || !dest) {
     origin = detectOrigin(toStr);
     dest = detectDestination(fromStr);
@@ -202,7 +260,7 @@ export const calculateTransferPrices = (from: any, to: any, distance: number) =>
     const safeFrom = typeof from === 'string' ? from.trim() : '';
     const safeTo = typeof to === 'string' ? to.trim() : '';
 
-    // 1. Check Fixed Ski Resort Routes from the official PDF table (uses +15% calc price directly)
+    // 1. Check Fixed Ski Resort Routes from the official PDF and Excel tables (uses +15% calc price directly)
     const skiPrices = matchSkiFixedRoute(safeFrom, safeTo);
     if (skiPrices) {
         return { prices: skiPrices, formatSpecial: true };
@@ -210,7 +268,7 @@ export const calculateTransferPrices = (from: any, to: any, distance: number) =>
 
     const routeKey = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
     
-    // 2. Check Fixed Special Alpine Routes (Täsch, St. Moritz, Pontresina)
+    // 2. Check Fixed Special Alpine Routes (e.g. Pontresina)
     if (fixedSpecialRoutes[routeKey]) {
         return { prices: fixedSpecialRoutes[routeKey], formatSpecial: true };
     }
