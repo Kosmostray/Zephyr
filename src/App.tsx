@@ -37,6 +37,111 @@ import {
   calculateTransferPrices 
 } from './pricing';
 
+const GOOGLE_API_KEY = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyAcA0FhiO6gvQf_jyXXFvAYh03EnyIPln0";
+
+let googleMapsScriptPromise: Promise<void> | null = null;
+const loadGoogleMaps = (apiKey: string): Promise<void> => {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if ((window as any).google?.maps) return Promise.resolve();
+  if (!googleMapsScriptPromise) {
+    googleMapsScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = (e) => reject(e);
+      document.head.appendChild(script);
+    });
+  }
+  return googleMapsScriptPromise;
+};
+
+const formatLocationQuery = (loc: string) => {
+  if (!loc) return "";
+  let s = loc.trim();
+  const lower = s.toLowerCase();
+
+  const translations: Record<string, string> = {
+    'мілан': 'Milan, Italy',
+    'милан': 'Milan, Italy',
+    'венеція': 'Venice, Italy',
+    'венеция': 'Venice, Italy',
+    'рим': 'Rome, Italy',
+    'флоренція': 'Florence, Italy',
+    'флоренция': 'Florence, Italy',
+    'генуя': 'Genoa, Italy',
+    'турин': 'Turin, Italy',
+    'болонья': 'Bologna, Italy',
+    'верона': 'Verona, Italy',
+    'комо': 'Lake Como, Italy',
+    'лугано': 'Lugano, Switzerland',
+    'мальпенса': 'Milan Malpensa Airport (MXP), Italy',
+    'лінате': 'Milan Linate Airport (LIN), Italy',
+    'ленате': 'Milan Linate Airport (LIN), Italy',
+    'бергамо': 'Bergamo Airport (BGY), Italy'
+  };
+
+  if (translations[lower]) return translations[lower];
+
+  if (!s.includes(',') && !lower.includes('italy') && !lower.includes('switzerland') && !lower.includes('austria') && !lower.includes('france')) {
+    return `${s}, Italy`;
+  }
+  return s;
+};
+
+const resolveClientGoogleDistance = async (origin: string, destination: string, apiKey: string) => {
+  try {
+    await loadGoogleMaps(apiKey);
+    if (!(window as any).google?.maps) return null;
+
+    // 1. Try DistanceMatrixService
+    const matrixResult = await new Promise<any>((res) => {
+      const service = new (window as any).google.maps.DistanceMatrixService();
+      service.getDistanceMatrix(
+        {
+          origins: [origin],
+          destinations: [destination],
+          travelMode: (window as any).google.maps.TravelMode.DRIVING,
+          unitSystem: (window as any).google.maps.UnitSystem.METRIC,
+        },
+        (response: any, status: any) => {
+          if (status === 'OK' && response?.rows?.[0]?.elements?.[0]?.status === 'OK') {
+            res(response.rows[0].elements[0]);
+          } else {
+            res(null);
+          }
+        }
+      );
+    });
+
+    if (matrixResult) return matrixResult;
+
+    // 2. Fallback to DirectionsService
+    const directionsResult = await new Promise<any>((res) => {
+      const dirService = new (window as any).google.maps.DirectionsService();
+      dirService.route(
+        {
+          origin: origin,
+          destination: destination,
+          travelMode: (window as any).google.maps.TravelMode.DRIVING,
+        },
+        (dirRes: any, dirStatus: any) => {
+          if (dirStatus === 'OK' && dirRes?.routes?.[0]?.legs?.[0]) {
+            res(dirRes.routes[0].legs[0]);
+          } else {
+            res(null);
+          }
+        }
+      );
+    });
+
+    return directionsResult;
+  } catch {
+    return null;
+  }
+};
+
 export default function App() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -64,6 +169,10 @@ export default function App() {
   const [toOpen, setToOpen] = useState(false);
 
   useEffect(() => {
+    if (GOOGLE_API_KEY) {
+      loadGoogleMaps(GOOGLE_API_KEY).catch(() => {});
+    }
+
     const handleClickOutside = (e: MouseEvent) => {
       if (fromContainerRef.current && !fromContainerRef.current.contains(e.target as Node)) {
         setFromOpen(false);
@@ -237,17 +346,12 @@ export default function App() {
           element = { distance: { text: "32.0 km", value: 32000 }, duration: { text: "35 mins", value: 2100 } };
           distanceValue = 32.0;
         } else {
-          // Try backend proxy if available
+          // 1. Try backend proxy if available (local development or server hosting)
           try {
-            const improve = (loc: string) => {
-              if (loc.toLowerCase().trim() === 'milan') return 'Milan, Metropolitan City of Milan, Italy';
-              if (['rome', 'venice', 'florence', 'naples'].includes(loc.toLowerCase().trim())) return `${loc}, Italy`;
-              return loc;
-            };
             const response = await fetch("/api/distance", {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ origin: improve(originLocation), destination: improve(destLocation) })
+              body: JSON.stringify({ origin: formatLocationQuery(originLocation), destination: formatLocationQuery(destLocation) })
             });
             if (response.ok) {
               const data = await response.json();
@@ -257,10 +361,29 @@ export default function App() {
               }
             }
           } catch {
-            // Backend not reachable (e.g. static demo)
+            // Backend not reachable
           }
 
-          // Graceful fallback estimate for testing
+          // 2. If backend is not available (e.g. static hosting on GitHub Pages), calculate directly in browser via Google Maps JS API!
+          if (!element && GOOGLE_API_KEY) {
+            try {
+              const clientElement = await resolveClientGoogleDistance(
+                formatLocationQuery(originLocation),
+                formatLocationQuery(destLocation),
+                GOOGLE_API_KEY
+              );
+              if (clientElement?.distance && clientElement?.duration) {
+                element = clientElement;
+                distanceValue = (typeof clientElement.distance.value === 'number')
+                  ? clientElement.distance.value / 1000
+                  : parseFloat(String(clientElement.distance.text).replace(/[^0-9.]/g, '')) || 45.0;
+              }
+            } catch (clientErr) {
+              console.warn("Client Google Maps lookup failed:", clientErr);
+            }
+          }
+
+          // Graceful fallback estimate only if both server and client API fail
           if (!element) {
             element = {
               distance: { text: "45.0 km", value: 45000 },
