@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
@@ -25,10 +26,43 @@ async function startServer() {
       return res.status(400).json({ error: "Missing API Key" });
     }
 
-    const o = origin.toLowerCase().includes('bellagio') && !origin.toLowerCase().includes('italy') ? `${origin}, Italy` : origin;
-    const d = destination.toLowerCase().includes('bellagio') && !destination.toLowerCase().includes('italy') ? `${destination}, Italy` : destination;
+    const formatLocationQuery = (loc: string) => {
+      if (!loc) return "";
+      let s = loc.trim();
+      const lower = s.toLowerCase();
 
-    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(o)}&destinations=${encodeURIComponent(d)}&units=metric&key=${usedApiKey}`;
+      const translations: Record<string, string> = {
+        'мілан': 'Milan, Italy',
+        'милан': 'Milan, Italy',
+        'венеція': 'Venice, Italy',
+        'венеция': 'Venice, Italy',
+        'рим': 'Rome, Italy',
+        'флоренція': 'Florence, Italy',
+        'флоренция': 'Florence, Italy',
+        'генуя': 'Genoa, Italy',
+        'турин': 'Turin, Italy',
+        'болонья': 'Bologna, Italy',
+        'верона': 'Verona, Italy',
+        'комо': 'Lake Como, Italy',
+        'лугано': 'Lugano, Switzerland',
+        'мальпенса': 'Milan Malpensa Airport (MXP), Italy',
+        'лінате': 'Milan Linate Airport (LIN), Italy',
+        'ленате': 'Milan Linate Airport (LIN), Italy',
+        'бергамо': 'Bergamo Airport (BGY), Italy'
+      };
+
+      if (translations[lower]) return translations[lower];
+
+      if (!s.includes(',') && !lower.includes('italy') && !lower.includes('switzerland') && !lower.includes('austria') && !lower.includes('france')) {
+        return `${s}, Italy`;
+      }
+      return s;
+    };
+
+    const o = formatLocationQuery(origin);
+    const d = formatLocationQuery(destination);
+
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(o)}&destinations=${encodeURIComponent(d)}&language=en&units=metric&key=${usedApiKey}`;
 
     try {
       const response = await fetch(url);

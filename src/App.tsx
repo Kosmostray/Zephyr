@@ -23,7 +23,11 @@ import {
   Menu, 
   X,
   MessageCircle,
-  Send
+  Send,
+  Plane,
+  Home,
+  Anchor,
+  Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -53,6 +57,24 @@ export default function App() {
 
   const listRef = useRef<HTMLDivElement>(null);
   const calculatorRef = useRef<HTMLDivElement>(null);
+  const fromContainerRef = useRef<HTMLDivElement>(null);
+  const toContainerRef = useRef<HTMLDivElement>(null);
+
+  const [fromOpen, setFromOpen] = useState(false);
+  const [toOpen, setToOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (fromContainerRef.current && !fromContainerRef.current.contains(e.target as Node)) {
+        setFromOpen(false);
+      }
+      if (toContainerRef.current && !toContainerRef.current.contains(e.target as Node)) {
+        setToOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +144,34 @@ export default function App() {
     "Rome Fiumicino Airport (FCO)",
     "Genoa Port"
   ];
+
+  const getPlaceIcon = (place: string) => {
+    const s = place.toLowerCase();
+    if (s.includes('airport') || s.includes('(mxp)') || s.includes('(lin)') || s.includes('(bgy)') || s.includes('(flr)') || s.includes('(fco)')) {
+      return <Plane size={16} className="text-[#f0a500] shrink-0 transition-transform group-hover:scale-110" />;
+    }
+    if (s.includes('port') || s.includes('genoa port')) {
+      return <Anchor size={16} className="text-[#f0a500] shrink-0 transition-transform group-hover:scale-110" />;
+    }
+    if (
+      s.includes('villa') || s.includes('resort') || s.includes('chalet') ||
+      s.includes('cervinia') || s.includes('cortina') || s.includes('courmayeur') ||
+      s.includes('campiglio') || s.includes('sestriere') || s.includes('gardena') ||
+      s.includes('tonale') || s.includes('champery') || s.includes('moritz') ||
+      s.includes('zermatt') || s.includes('ischgl') || s.includes('kitzbühel') ||
+      s.includes('kitzbuhel') || s.includes('anton') || s.includes('sölden') ||
+      s.includes('solden') || s.includes('mayrhofen') || s.includes('saalbach') ||
+      s.includes('alpbach') || s.includes('obergurgl') || s.includes('söll') ||
+      s.includes('soll') || s.includes('como') || s.includes('bellagio') ||
+      s.includes('tremezzo')
+    ) {
+      return <Home size={16} className="text-[#f0a500] shrink-0 transition-transform group-hover:scale-110" />;
+    }
+    if (s.includes('city') || s.includes('center')) {
+      return <Building2 size={16} className="text-[#f0a500] shrink-0 transition-transform group-hover:scale-110" />;
+    }
+    return <MapPin size={16} className="text-[#f0a500] shrink-0 transition-transform group-hover:scale-110" />;
+  };
 
   const handleCalculate = async (overrideFrom?: any, overrideTo?: any) => {
     // Robustly ensure origin and destination are strings, ignoring any event objects passed by click handlers
@@ -441,7 +491,8 @@ export default function App() {
                       transition={{ duration: 0.3 }}
                       className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 items-end"
                     >
-                      <div className="text-left">
+                      {/* Pick-up Location */}
+                      <div className="text-left relative" ref={fromContainerRef}>
                         <label className="block text-xs uppercase tracking-wider text-white/70 mb-2 font-medium">
                           Pick-up Location
                         </label>
@@ -449,21 +500,69 @@ export default function App() {
                           <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#f0a500]" size={18} />
                           <input
                             type="text"
-                            list="pickup-places"
                             value={from}
-                            onChange={(e) => setFrom(e.target.value)}
+                            onFocus={() => {
+                              setFromOpen(true);
+                              setToOpen(false);
+                            }}
+                            onChange={(e) => {
+                              setFrom(e.target.value);
+                              setFromOpen(true);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') setFromOpen(false);
+                            }}
                             placeholder="Airport, Hotel, or City"
-                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/40 transition-all"
+                            autoComplete="off"
+                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/40 transition-all cursor-text"
                           />
-                          <datalist id="pickup-places">
-                            {popularPlaces.map((p, idx) => (
-                              <option key={idx} value={p} />
-                            ))}
-                          </datalist>
                         </div>
+
+                        {/* Custom Styled Dropdown */}
+                        <AnimatePresence>
+                          {fromOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-0 right-0 top-full mt-2 z-50 bg-[#161616]/95 backdrop-blur-2xl border border-[#f0a500]/30 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] max-h-60 overflow-y-auto p-1.5 flex flex-col gap-0.5"
+                            >
+                              <div className="px-3.5 py-2 text-xs sm:text-[10px] uppercase font-bold tracking-wider text-[#f0a500] border-b border-white/10 mb-1 flex items-center justify-between">
+                                <span>Popular Hubs & Resorts</span>
+                                <span className="text-white/50 text-[11px] sm:text-[10px] font-normal lowercase tracking-normal">
+                                  {popularPlaces.filter(p => p.toLowerCase().includes(from.toLowerCase().trim())).length} popular places
+                                </span>
+                              </div>
+                              {popularPlaces.filter(p => p.toLowerCase().includes(from.toLowerCase().trim())).length > 0 ? (
+                                popularPlaces
+                                  .filter(p => p.toLowerCase().includes(from.toLowerCase().trim()))
+                                  .map((p, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => {
+                                        setFrom(p);
+                                        setFromOpen(false);
+                                      }}
+                                      className="w-full text-left px-3.5 py-3 sm:py-2 text-sm sm:text-xs text-white/95 hover:text-[#f0a500] hover:bg-[#f0a500]/15 rounded-lg transition-all flex items-center gap-3 group cursor-pointer active:bg-[#f0a500]/25"
+                                    >
+                                      {getPlaceIcon(p)}
+                                      <span className="truncate">{p}</span>
+                                    </button>
+                                  ))
+                              ) : (
+                                <div className="px-3.5 py-3 text-sm sm:text-xs text-white/50 text-center">
+                                  Custom location entered
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
-                      <div className="text-left">
+                      {/* Drop-off Destination */}
+                      <div className="text-left relative" ref={toContainerRef}>
                         <label className="block text-xs uppercase tracking-wider text-white/70 mb-2 font-medium">
                           Drop-off Destination
                         </label>
@@ -471,18 +570,65 @@ export default function App() {
                           <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#f0a500]" size={18} />
                           <input
                             type="text"
-                            list="dropoff-places"
                             value={to}
-                            onChange={(e) => setTo(e.target.value)}
+                            onFocus={() => {
+                              setToOpen(true);
+                              setFromOpen(false);
+                            }}
+                            onChange={(e) => {
+                              setTo(e.target.value);
+                              setToOpen(true);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Escape') setToOpen(false);
+                            }}
                             placeholder="Resort, Villa, or Address"
-                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/40 transition-all"
+                            autoComplete="off"
+                            className="w-full bg-black/50 border border-white/20 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#f0a500] focus:ring-1 focus:ring-[#f0a500] focus:bg-black/70 text-sm text-white placeholder-white/40 transition-all cursor-text"
                           />
-                          <datalist id="dropoff-places">
-                            {popularPlaces.map((p, idx) => (
-                              <option key={idx} value={p} />
-                            ))}
-                          </datalist>
                         </div>
+
+                        {/* Custom Styled Dropdown */}
+                        <AnimatePresence>
+                          {toOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-0 right-0 top-full mt-2 z-50 bg-[#161616]/95 backdrop-blur-2xl border border-[#f0a500]/30 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] max-h-60 overflow-y-auto p-1.5 flex flex-col gap-0.5"
+                            >
+                              <div className="px-3.5 py-2 text-xs sm:text-[10px] uppercase font-bold tracking-wider text-[#f0a500] border-b border-white/10 mb-1 flex items-center justify-between">
+                                <span>Popular Hubs & Resorts</span>
+                                <span className="text-white/50 text-[11px] sm:text-[10px] font-normal lowercase tracking-normal">
+                                  {popularPlaces.filter(p => p.toLowerCase().includes(to.toLowerCase().trim())).length} popular places
+                                </span>
+                              </div>
+                              {popularPlaces.filter(p => p.toLowerCase().includes(to.toLowerCase().trim())).length > 0 ? (
+                                popularPlaces
+                                  .filter(p => p.toLowerCase().includes(to.toLowerCase().trim()))
+                                  .map((p, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => {
+                                        setTo(p);
+                                        setToOpen(false);
+                                      }}
+                                      className="w-full text-left px-3.5 py-3 sm:py-2 text-sm sm:text-xs text-white/95 hover:text-[#f0a500] hover:bg-[#f0a500]/15 rounded-lg transition-all flex items-center gap-3 group cursor-pointer active:bg-[#f0a500]/25"
+                                    >
+                                      {getPlaceIcon(p)}
+                                      <span className="truncate">{p}</span>
+                                    </button>
+                                  ))
+                              ) : (
+                                <div className="px-3.5 py-3 text-sm sm:text-xs text-white/50 text-center">
+                                  Custom destination entered
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
 
                       <div className="text-left">
