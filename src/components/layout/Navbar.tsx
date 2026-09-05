@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Car, Menu, X, MessageCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Car, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { navItems } from '../../constants/navigation';
 
@@ -16,14 +16,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Prevent background scrolling when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     onScrollToSection(e, id);
     setMobileMenuOpen(false);
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 w-full z-50 bg-[#131313]/70 nav-blur border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-      <div className="flex justify-between items-center px-4 sm:px-8 md:px-16 py-4 sm:py-5 max-w-[1440px] mx-auto">
+    <nav
+      className={`fixed top-0 left-0 right-0 w-full z-50 border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)] transition-[height,background-color] duration-200 ${
+        mobileMenuOpen
+          ? 'h-[100dvh] bg-[#131313] flex flex-col md:h-auto md:bg-[#131313]/70 md:nav-blur'
+          : 'bg-[#131313]/70 nav-blur'
+      }`}
+    >
+      <div className="flex justify-between items-center px-4 sm:px-8 md:px-16 py-4 sm:py-5 max-w-[1440px] mx-auto w-full flex-shrink-0">
         <a href="#" onClick={(e) => handleNavClick(e, 'hero')} className="flex items-center gap-2 group">
           <img 
             src="./logo.png" 
@@ -74,60 +92,57 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden text-white/80 hover:text-[#f0a500] p-2 transition-colors cursor-pointer"
+          className="md:hidden text-white/80 hover:text-[#f0a500] p-2 transition-colors cursor-pointer active:scale-95"
           aria-label="Toggle Navigation Menu"
         >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Fullscreen Mobile Navigation Menu Content */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="md:hidden bg-[#131313]/98 backdrop-blur-2xl border-b border-white/10 px-6 py-6 flex flex-col gap-4 shadow-2xl overflow-hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden flex-1 flex flex-col justify-between px-6 py-6 sm:px-8 sm:py-8 overflow-y-auto max-w-[1440px] mx-auto w-full"
           >
-            {navItems.map((item) => {
-              const isActive = activeSection === item.id;
-              return (
-                <a
-                  key={item.id}
-                  href={`#${item.id}`}
-                  onClick={(e) => handleNavClick(e, item.id)}
-                  className={`py-2 text-base font-medium transition-colors flex items-center justify-between ${
-                    isActive ? 'text-[#f0a500] font-bold' : 'text-white/80 hover:text-[#f0a500]'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#f0a500]" />}
-                </a>
-              );
-            })}
-            <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+            {/* Centered Large Menu Links */}
+            <div className="flex flex-col items-center justify-center gap-6 sm:gap-7 my-auto py-4">
+              {navItems.map((item) => {
+                const isActive = activeSection === item.id;
+                return (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    onClick={(e) => handleNavClick(e, item.id)}
+                    className={`font-serif text-2xl sm:text-3xl font-bold transition-all text-center tracking-wide ${
+                      isActive 
+                        ? 'text-[#f0a500] scale-105' 
+                        : 'text-white/80 hover:text-[#f0a500] active:text-[#f0a500]'
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Bottom Book Now CTA in Mobile Menu */}
+            <div className="pt-4 border-t border-white/10 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => {
                   onScrollToCalculator();
                   setMobileMenuOpen(false);
                 }}
-                className="w-full bg-[#f0a500] text-black py-3 rounded-xl font-bold text-xs uppercase tracking-wider amber-glow flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                className="w-full bg-[#f0a500] text-[#131313] py-4 rounded-2xl font-bold text-sm uppercase tracking-wider amber-glow flex items-center justify-center gap-2.5 cursor-pointer active:scale-95 shadow-xl shadow-[#f0a500]/25"
               >
-                <Car size={16} />
-                <span>Book a Transfer</span>
+                <Car size={18} />
+                <span>Book Now</span>
               </button>
-              <a
-                href="https://wa.me/390212345678"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] hover:bg-[#25D366] hover:text-black py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
-              >
-                <MessageCircle size={16} />
-                <span>WhatsApp Concierge</span>
-              </a>
             </div>
           </motion.div>
         )}
