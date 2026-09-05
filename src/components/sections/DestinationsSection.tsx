@@ -10,7 +10,7 @@ export const DestinationsSection: React.FC<DestinationsSectionProps> = ({
   onExploreAllRoutes
 }) => {
   return (
-    <section id="destinations" className="py-24 bg-[#1b1c1c]/50 px-6 md:px-16 border-y border-white/5">
+    <section id="destinations" className="scroll-mt-20 py-24 bg-[#1b1c1c]/50 px-6 md:px-16 border-y border-white/5">
       <div className="max-w-[1440px] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
           <div>

@@ -4,7 +4,6 @@ import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { SelectedVehicle, PriceResult, ClientFormData, ClientFormErrors } from '../../types';
-import { vehicleImages } from '../../constants/fleet';
 
 interface BookingFormProps {
   selectedVehicle: SelectedVehicle;
@@ -122,44 +121,38 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       </div>
 
       {/* Selected Vehicle & Journey Summary Card */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-black/60 border border-white/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-xl overflow-hidden bg-black/50 border border-white/15 flex-shrink-0">
-            <img
-              src={vehicleImages[selectedVehicle.type]}
-              alt={selectedVehicle.type}
-              className="w-full h-full object-cover"
-            />
+      <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-xl">
+        <div className="w-full md:w-auto">
+          <div className="inline-flex items-center px-3 py-0.5 rounded-full bg-[#f0a500]/15 border border-[#f0a500]/40 text-xs uppercase font-mono font-bold text-[#f0a500] tracking-wider mb-2">
+            {selectedVehicle.type}
           </div>
-          <div>
-            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#f0a500]/15 border border-[#f0a500]/35 text-xs uppercase font-mono font-bold text-[#f0a500] tracking-wider mb-1">
-              {selectedVehicle.type}
+          <div className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2.5 sm:gap-3 flex-wrap leading-snug">
+            <span>{from}</span>
+            <span className="text-[#f0a500] text-xl sm:text-2xl font-black shrink-0">➔</span>
+            <span>{to}</span>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6 mt-3.5 flex-wrap">
+            <div className="flex items-center gap-2 text-[#f0a500] text-sm sm:text-base font-semibold font-mono">
+              <MapPin size={17} className="text-[#f0a500] shrink-0" />
+              <span>{result.distance}</span>
             </div>
-            <div className="text-sm sm:text-base font-bold text-white flex items-center gap-2 mt-0.5 flex-wrap">
-              <span>{from}</span>
-              <span className="text-[#f0a500]">➔</span>
-              <span>{to}</span>
+            <div className="flex items-center gap-2 text-[#f0a500] text-sm sm:text-base font-semibold font-mono">
+              <Clock size={17} className="text-[#f0a500] shrink-0" />
+              <span>{result.duration}</span>
             </div>
-            <div className="text-xs sm:text-sm text-white/80 flex items-center gap-2 sm:gap-3 mt-2.5 flex-wrap font-mono">
-              <span className="flex items-center gap-1.5 bg-[#f0a500]/15 border border-[#f0a500]/30 px-2.5 py-1 rounded-lg text-[#f0a500] font-bold">
-                <MapPin size={13} className="text-[#f0a500]" /> {result.distance}
-              </span>
-              <span className="flex items-center gap-1.5 bg-[#f0a500]/15 border border-[#f0a500]/30 px-2.5 py-1 rounded-lg text-[#f0a500] font-bold">
-                <Clock size={13} className="text-[#f0a500]" /> {result.duration}
-              </span>
-              <span className="flex items-center gap-1.5 bg-[#f0a500]/15 border border-[#f0a500]/30 px-2.5 py-1 rounded-lg text-[#f0a500] font-bold">
-                <Users size={13} className="text-[#f0a500]" /> {passengers} {passengers === 1 ? 'Passenger' : 'Passengers'}
-              </span>
+            <div className="flex items-center gap-2 text-[#f0a500] text-sm sm:text-base font-semibold font-mono">
+              <Users size={17} className="text-[#f0a500] shrink-0" />
+              <span>{passengers} {passengers === 1 ? 'Passenger' : 'Passengers'}</span>
             </div>
           </div>
         </div>
 
-        <div className="md:text-right border-t md:border-t-0 pt-3 md:pt-0 w-full md:w-auto flex md:flex-col justify-between items-baseline md:items-end border-white/10">
-          <span className="text-[11px] uppercase font-mono tracking-widest text-white/50 font-semibold block">Fixed Rate</span>
-          <span className="text-2xl sm:text-3xl font-mono font-bold text-[#f0a500]">
+        <div className="md:text-right border-t md:border-t-0 pt-3 md:pt-0 w-full md:w-auto flex md:flex-col justify-between items-baseline md:items-end border-white/10 shrink-0">
+          <span className="text-xs uppercase font-mono tracking-widest text-white/50 font-semibold block">Fixed Rate</span>
+          <span className="text-3xl sm:text-4xl font-mono font-bold text-[#f0a500]">
             €{Math.round(selectedVehicle.price)}
           </span>
-          <span className="text-[10px] text-white/40 hidden md:block">All-inclusive · No hidden fees</span>
+          <span className="text-[11px] text-white/40 hidden md:block">All-inclusive · No hidden fees</span>
         </div>
       </div>
 

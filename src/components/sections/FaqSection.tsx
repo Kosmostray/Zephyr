@@ -11,7 +11,7 @@ export const FaqSection: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="py-20 sm:py-28 px-4 sm:px-8 md:px-16 max-w-[1050px] mx-auto relative z-10">
+    <section id="faq" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-8 md:px-16 max-w-[1050px] mx-auto relative z-10">
       <div className="text-center mb-12 sm:mb-16">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1b1c1c] border border-white/15 text-xs font-mono uppercase tracking-[0.2em] text-[#f0a500] mb-4 shadow-lg ring-1 ring-white/5">
           <HelpCircle size={14} className="text-[#f0a500]" />

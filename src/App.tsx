@@ -210,27 +210,21 @@ export default function App() {
   // Smooth scroll to section
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
+    setActiveSection(id);
     const el = document.getElementById(id);
     if (el) {
-      const navOffset = 80;
-      const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
-      window.scrollTo({
-        top: elementPosition - navOffset,
-        behavior: 'smooth'
-      });
-      setActiveSection(id);
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
     }
   };
 
   // Smooth scroll to calculator box
   const scrollToCalculator = () => {
     if (calculatorRef.current) {
-      const navOffset = 90;
-      const elementPosition = calculatorRef.current.getBoundingClientRect().top + window.pageYOffset;
-      window.scrollTo({
-        top: elementPosition - navOffset,
-        behavior: 'smooth'
-      });
+      setTimeout(() => {
+        calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
     }
   };
 

@@ -2,7 +2,7 @@ import React from 'react';
 
 export const ExperienceSection: React.FC = () => {
   return (
-    <section id="experience" className="py-24 px-6 md:px-16 max-w-[1440px] mx-auto">
+    <section id="experience" className="scroll-mt-20 py-24 px-6 md:px-16 max-w-[1440px] mx-auto">
       <div className="text-center mb-16">
         <span className="text-xs font-mono uppercase tracking-widest text-[#f0a500] mb-2 block">
           Distinctive Heritage

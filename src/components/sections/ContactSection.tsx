@@ -32,7 +32,7 @@ export const ContactSection: React.FC = () => {
   };
 
   return (
-    <section id="contact" className="py-20 sm:py-28 px-4 sm:px-8 md:px-16 w-full relative overflow-hidden">
+    <section id="contact" className="scroll-mt-20 py-20 sm:py-28 px-4 sm:px-8 md:px-16 w-full relative overflow-hidden">
       {/* Background Chauffeur Image with Darkened Overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img 

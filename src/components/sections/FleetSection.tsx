@@ -3,7 +3,7 @@ import { vehicleImages } from '../../constants/fleet';
 
 export const FleetSection: React.FC = () => {
   return (
-    <section id="fleet" className="w-full relative overflow-hidden py-24 px-6 md:px-16 bg-gradient-to-b from-[#131313] via-[#1c170a] md:via-[#16130b] to-[#131313]">
+    <section id="fleet" className="scroll-mt-20 w-full relative overflow-hidden py-24 px-6 md:px-16 bg-gradient-to-b from-[#131313] via-[#1c170a] md:via-[#16130b] to-[#131313]">
       {/* Stylized Subdued Yellow / Amber Ambient Background */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Ambient Radial Golden Aura: rich on mobile, subtle unified wash on desktop */}

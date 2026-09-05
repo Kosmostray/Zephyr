@@ -51,7 +51,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onBookAnother
 }) => {
   return (
-    <section id="hero" className="relative min-h-[92vh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
+    <section id="hero" className="scroll-mt-20 relative min-h-[92vh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img 
           className="w-full h-full object-cover object-[35%_65%] sm:object-[45%_60%] md:object-center scale-110 sm:scale-105 md:scale-100 transition-all duration-700"
