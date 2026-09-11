@@ -48,12 +48,23 @@ async function startServer() {
         'мальпенса': 'Milan Malpensa Airport (MXP), Italy',
         'лінате': 'Milan Linate Airport (LIN), Italy',
         'ленате': 'Milan Linate Airport (LIN), Italy',
-        'бергамо': 'Bergamo Airport (BGY), Italy'
+        'бергамо': 'Bergamo Airport (BGY), Italy',
+        'монако': 'Monaco',
+        'monaco': 'Monaco',
+        'монте карло': 'Monaco, Monte-Carlo',
+        'монте-карло': 'Monaco, Monte-Carlo',
+        'monte carlo': 'Monaco, Monte-Carlo',
+        'monte-carlo': 'Monaco, Monte-Carlo',
+        'principality of monaco': 'Monaco'
       };
 
       if (translations[lower]) return translations[lower];
 
-      if (!s.includes(',') && !lower.includes('italy') && !lower.includes('switzerland') && !lower.includes('austria') && !lower.includes('france')) {
+      if (lower.includes('monaco') || lower.includes('монако') || lower.includes('monte carlo') || lower.includes('монте-карло') || lower.includes('монте карло')) {
+        return 'Monaco';
+      }
+
+      if (!s.includes(',') && !lower.includes('italy') && !lower.includes('switzerland') && !lower.includes('austria') && !lower.includes('france') && !lower.includes('monaco')) {
         return `${s}, Italy`;
       }
       return s;

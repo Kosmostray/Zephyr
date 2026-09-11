@@ -30,7 +30,8 @@ export const popularPlaces = [
   "Florence Airport (FLR)",
   "Tuscany Boutique Villa",
   "Rome Fiumicino Airport (FCO)",
-  "Genoa Port"
+  "Genoa Port",
+  "Monaco (Monte Carlo)"
 ];
 
 export const getPlaceIcon = (place: string) => {

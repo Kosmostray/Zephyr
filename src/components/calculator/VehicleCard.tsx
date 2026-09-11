@@ -33,14 +33,11 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             alt={type}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <div className="absolute top-2.5 right-2.5 bg-black/85 backdrop-blur-md px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold font-mono text-[#f0a500] uppercase border border-[#f0a500]/40 tracking-wider shadow-lg">
-            {type}
-          </div>
         </div>
 
         <div className="mb-2 text-center h-[62px] sm:h-[68px] flex flex-col justify-start">
-          <h4 className="font-serif text-base sm:text-lg font-bold text-white tracking-wide truncate">
-            {spec.model}
+          <h4 className="font-serif text-lg sm:text-xl font-bold text-white tracking-wide truncate">
+            {type}
           </h4>
           <p className="text-white/60 text-[11px] sm:text-xs line-clamp-2 mt-1 px-1 leading-snug">
             {spec.desc}

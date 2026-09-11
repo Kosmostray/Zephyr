@@ -130,7 +130,7 @@ export default function App() {
               const data = await response.json();
               if (data.status === 'OK' && data.rows?.[0]?.elements?.[0]?.status === 'OK') {
                 element = data.rows[0].elements[0];
-                distanceValue = element.distance.value / 1000;
+                distanceValue = Math.round(element.distance.value / 1000);
               }
             }
           } catch {
@@ -148,8 +148,8 @@ export default function App() {
               if (clientElement?.distance && clientElement?.duration) {
                 element = clientElement;
                 distanceValue = (typeof clientElement.distance.value === 'number')
-                  ? clientElement.distance.value / 1000
-                  : parseFloat(String(clientElement.distance.text).replace(/[^0-9.]/g, '')) || 45.0;
+                  ? Math.round(clientElement.distance.value / 1000)
+                  : Math.round(parseFloat(String(clientElement.distance.text).replace(/[^0-9.]/g, ''))) || 45.0;
               }
             } catch (clientErr) {
               console.warn("Client Google Maps lookup failed:", clientErr);
