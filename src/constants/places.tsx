@@ -31,7 +31,14 @@ export const popularPlaces = [
   "Tuscany Boutique Villa",
   "Rome Fiumicino Airport (FCO)",
   "Genoa Port",
-  "Monaco (Monte Carlo)"
+  "Portofino, Italy",
+  "Sanremo, Italy",
+  "Monaco (Monte Carlo)",
+  "Nice (French Riviera), France",
+  "Cannes, France",
+  "Lugano, Switzerland",
+  "Geneva, Switzerland",
+  "Zurich, Switzerland"
 ];
 
 export const getPlaceIcon = (place: string) => {
