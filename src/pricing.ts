@@ -42,19 +42,19 @@ const fixedSpecialRoutesRaw: any = {
 
 const fixedSpecialRoutes: any = {};
 for (const route in fixedSpecialRoutesRaw) {
-    const rawPrices = fixedSpecialRoutesRaw[route];
-    const VAT_MULTIPLIER = 1.12;
-    const pricesWithVat: any = {};
-    for(const type in rawPrices) pricesWithVat[type] = rawPrices[type] * VAT_MULTIPLIER;
-    
-    const primaryKeyNormalized = normalizeKey(route);
-    const parts = primaryKeyNormalized.split('-');
-    const inverseKeyNormalized = parts.slice(parts.length / 2).join('-') + '-' + parts.slice(0, parts.length / 2).join('-');
-    fixedSpecialRoutes[primaryKeyNormalized] = pricesWithVat;
-    fixedSpecialRoutes[inverseKeyNormalized] = pricesWithVat;
+  const rawPrices = fixedSpecialRoutesRaw[route];
+  const VAT_MULTIPLIER = 1.12;
+  const pricesWithVat: any = {};
+  for (const type in rawPrices) pricesWithVat[type] = rawPrices[type] * VAT_MULTIPLIER;
+
+  const primaryKeyNormalized = normalizeKey(route);
+  const parts = primaryKeyNormalized.split('-');
+  const inverseKeyNormalized = parts.slice(parts.length / 2).join('-') + '-' + parts.slice(0, parts.length / 2).join('-');
+  fixedSpecialRoutes[primaryKeyNormalized] = pricesWithVat;
+  fixedSpecialRoutes[inverseKeyNormalized] = pricesWithVat;
 }
 
-const rates: any = { Standard: 0.6, Business: 0.8, Luxury: 1.5, "Standard Van": 0.8, "Business Van": 0.9, "Business Van Plus": 1.0, "Minibus 10 pax": 1.2 };
+const rates: any = { Standard: 0.7, Business: 0.8, Luxury: 1.5, "Standard Van": 0.8, "Business Van": 0.9, "Business Van Plus": 1.0, "Minibus 10 pax": 1.2 };
 
 const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina", "cervinia", "chervinia", "cortina", "courmayeur", "cormajor", "cormayeur", "campiglio", "sestriere", "gardena", "ortisei", "alpbach", "ischgl", "kitzbuhel", "mayrhofen", "obergurgl", "saalbach", "solden", "soll", "anton", "champery", "tonale"];
 
@@ -257,65 +257,65 @@ const matchPredefinedRoute = (fromStr: any, toStr: any) => {
 
 // Pricing calculation logic
 export const calculateTransferPrices = (from: any, to: any, distance: number) => {
-    const safeFrom = typeof from === 'string' ? from.trim() : '';
-    const safeTo = typeof to === 'string' ? to.trim() : '';
+  const safeFrom = typeof from === 'string' ? from.trim() : '';
+  const safeTo = typeof to === 'string' ? to.trim() : '';
 
-    // 1. Check Fixed Ski Resort Routes from the official PDF and Excel tables (uses +15% calc price directly)
-    const skiPrices = matchSkiFixedRoute(safeFrom, safeTo);
-    if (skiPrices) {
-        return { prices: skiPrices, formatSpecial: true };
-    }
+  // 1. Check Fixed Ski Resort Routes from the official PDF and Excel tables (uses +15% calc price directly)
+  const skiPrices = matchSkiFixedRoute(safeFrom, safeTo);
+  if (skiPrices) {
+    return { prices: skiPrices, formatSpecial: true };
+  }
 
-    const routeKey = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
-    
-    // 2. Check Fixed Special Alpine Routes (e.g. Pontresina)
-    if (fixedSpecialRoutes[routeKey]) {
-        return { prices: fixedSpecialRoutes[routeKey], formatSpecial: true };
-    }
+  const routeKey = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
 
-    const fromLower = safeFrom.toLowerCase();
-    const toLower = safeTo.toLowerCase();
-    const isSpecial = specialPlaces.some((place) => fromLower.includes(place) || toLower.includes(place));
-    
-    // 3. Check Predefined Italian Airport Routes from Table
-    const predefined = matchPredefinedRoute(safeFrom, safeTo);
-    if (predefined) {
-        return { prices: predefined, formatSpecial: isSpecial };
-    }
+  // 2. Check Fixed Special Alpine Routes (e.g. Pontresina)
+  if (fixedSpecialRoutes[routeKey]) {
+    return { prices: fixedSpecialRoutes[routeKey], formatSpecial: true };
+  }
 
-    const routeKey1 = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
-    const routeKey2 = `${normalizeKey(safeTo)}-${normalizeKey(safeFrom)}`;
-    if (predefinedRoutes[routeKey1]) return { prices: predefinedRoutes[routeKey1], formatSpecial: isSpecial };
-    if (predefinedRoutes[routeKey2]) return { prices: predefinedRoutes[routeKey2], formatSpecial: isSpecial };
+  const fromLower = safeFrom.toLowerCase();
+  const toLower = safeTo.toLowerCase();
+  const isSpecial = specialPlaces.some((place) => fromLower.includes(place) || toLower.includes(place));
 
-    // 4. General Distance-Based Calculation
-    const airportList = ["malpensa", "bergamo", "linate", "caravaggio"];
-    let finalDistance: number;
-    
-    const isSurcharged = Object.keys(surchargedPlaces).some(place => fromLower.includes(place) || toLower.includes(place));
-    
-    if (isSurcharged) {
-      finalDistance = (Number(distance) || 45) * 2 + 20;
+  // 3. Check Predefined Italian Airport Routes from Table
+  const predefined = matchPredefinedRoute(safeFrom, safeTo);
+  if (predefined) {
+    return { prices: predefined, formatSpecial: isSpecial };
+  }
+
+  const routeKey1 = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
+  const routeKey2 = `${normalizeKey(safeTo)}-${normalizeKey(safeFrom)}`;
+  if (predefinedRoutes[routeKey1]) return { prices: predefinedRoutes[routeKey1], formatSpecial: isSpecial };
+  if (predefinedRoutes[routeKey2]) return { prices: predefinedRoutes[routeKey2], formatSpecial: isSpecial };
+
+  // 4. General Distance-Based Calculation
+  const airportList = ["malpensa", "bergamo", "linate", "caravaggio"];
+  let finalDistance: number;
+
+  const isSurcharged = Object.keys(surchargedPlaces).some(place => fromLower.includes(place) || toLower.includes(place));
+
+  if (isSurcharged) {
+    finalDistance = (Number(distance) || 45) * 2 + 20;
+  } else {
+    const doubledDistance = (Number(distance) || 45) * 2;
+    if (fromLower.includes("linate") || toLower.includes("linate")) {
+      finalDistance = doubledDistance + 10;
+    } else if (airportList.some((airport) => fromLower.includes(airport) || toLower.includes(airport))) {
+      finalDistance = doubledDistance + 50;
     } else {
-      const doubledDistance = (Number(distance) || 45) * 2;
-      if (fromLower.includes("linate") || toLower.includes("linate")) {
-        finalDistance = doubledDistance + 10;
-      } else if (airportList.some((airport) => fromLower.includes(airport) || toLower.includes(airport))) {
-        finalDistance = doubledDistance + 50;
-      } else {
-        finalDistance = doubledDistance + 20;
-      }
+      finalDistance = doubledDistance + 20;
     }
-    
-    const calculatedPrices: any = {};
-    for (const key in rates) {
-      let basePrice = finalDistance * rates[key];
-      if (isSpecial && !isSurcharged) {
-        basePrice *= 1.1;
-      }
-      let priceWithVat = basePrice * 1.12;
-      calculatedPrices[key] = Math.round(priceWithVat);
+  }
+
+  const calculatedPrices: any = {};
+  for (const key in rates) {
+    let basePrice = finalDistance * rates[key];
+    if (isSpecial && !isSurcharged) {
+      basePrice *= 1.1;
     }
-    
-    return { prices: calculatedPrices, formatSpecial: isSpecial };
+    let priceWithVat = basePrice * 1.12;
+    calculatedPrices[key] = Math.round(priceWithVat);
+  }
+
+  return { prices: calculatedPrices, formatSpecial: isSpecial };
 };
