@@ -38,7 +38,10 @@ export const popularPlaces = [
   "Cannes, France",
   "Lugano, Switzerland",
   "Geneva, Switzerland",
-  "Zurich, Switzerland"
+  "Zurich, Switzerland",
+  "Brig, Switzerland",
+  "Locarno, Switzerland",
+  "Ascona, Switzerland"
 ];
 
 export const getPlaceIcon = (place: string) => {

@@ -172,6 +172,27 @@ async function startServer() {
         'церматт': 'Zermatt, Switzerland',
         'champery': 'Champéry, Switzerland',
         'шампері': 'Champéry, Switzerland',
+        'brig': 'Brig, Switzerland',
+        'бриг': 'Brig, Switzerland',
+        'бріг': 'Brig, Switzerland',
+        'brig-glis': 'Brig, Switzerland',
+        'visp': 'Visp, Switzerland',
+        'фісп': 'Visp, Switzerland',
+        'висп': 'Visp, Switzerland',
+        'sion': 'Sion, Switzerland',
+        'сьйон': 'Sion, Switzerland',
+        'сион': 'Sion, Switzerland',
+        'locarno': 'Locarno, Switzerland',
+        'локарно': 'Locarno, Switzerland',
+        'ascona': 'Ascona, Switzerland',
+        'аскона': 'Ascona, Switzerland',
+        'bellinzona': 'Bellinzona, Switzerland',
+        'беллінцона': 'Bellinzona, Switzerland',
+        'беллинцона': 'Bellinzona, Switzerland',
+        'andermatt': 'Andermatt, Switzerland',
+        'андерматт': 'Andermatt, Switzerland',
+        'saas-fee': 'Saas-Fee, Switzerland',
+        'саас-фе': 'Saas-Fee, Switzerland',
 
         // Austria
         'innsbruck': 'Innsbruck, Austria',
@@ -224,6 +245,27 @@ async function startServer() {
       }
       if (lower.includes('zurich') || lower.includes('zürich') || lower.includes('цюрих') || lower.includes('цюріх')) {
         return 'Zurich, Switzerland';
+      }
+      if (lower.includes('brig') || lower.includes('бриг') || lower.includes('бріг')) {
+        return 'Brig, Switzerland';
+      }
+      if (lower.includes('visp') || lower.includes('фісп') || lower.includes('висп')) {
+        return 'Visp, Switzerland';
+      }
+      if (lower.includes('sion') || lower.includes('сьйон') || lower.includes('сион')) {
+        return 'Sion, Switzerland';
+      }
+      if (lower.includes('locarno') || lower.includes('локарно')) {
+        return 'Locarno, Switzerland';
+      }
+      if (lower.includes('ascona') || lower.includes('аскона')) {
+        return 'Ascona, Switzerland';
+      }
+      if (lower.includes('bellinzona') || lower.includes('беллінцон') || lower.includes('беллинцон')) {
+        return 'Bellinzona, Switzerland';
+      }
+      if (lower.includes('andermatt') || lower.includes('андерматт')) {
+        return 'Andermatt, Switzerland';
       }
       if (lower.includes('bellagio') || lower.includes('белладж')) {
         return 'Bellagio, Lake Como, Italy';

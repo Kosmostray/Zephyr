@@ -56,7 +56,7 @@ for (const route in fixedSpecialRoutesRaw) {
 
 const rates: any = { Standard: 0.7, Business: 0.8, Luxury: 1.5, "Standard Van": 0.8, "Business Van": 0.9, "Business Van Plus": 1.0, "Minibus 10 pax": 1.2 };
 
-const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina", "cervinia", "chervinia", "cortina", "courmayeur", "cormajor", "cormayeur", "campiglio", "sestriere", "gardena", "ortisei", "alpbach", "ischgl", "kitzbuhel", "mayrhofen", "obergurgl", "saalbach", "solden", "soll", "anton", "champery", "tonale"];
+const specialPlaces = ["tasch", "zermatt", "st moritz", "bellagio", "mennagio", "sankt moritz", "pontresina", "cervinia", "chervinia", "cortina", "courmayeur", "cormajor", "cormayeur", "campiglio", "sestriere", "gardena", "ortisei", "alpbach", "ischgl", "kitzbuhel", "mayrhofen", "obergurgl", "saalbach", "solden", "soll", "anton", "champery", "tonale", "brig", "бриг", "бріг", "visp", "sion", "andermatt", "saas-fee"];
 
 const surchargedPlaces: any = {
   "como": { Standard: 80, Business: 100, "Business Van": 110, "Standard Van": 80, "Business Van Plus": 130, Luxury: 100, "Minibus 10 pax": 100 },
