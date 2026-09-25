@@ -5,6 +5,7 @@ import { PriceResult, SelectedVehicle, BookingStep, ClientFormData } from '../..
 import { CalculatorForm } from '../calculator/CalculatorForm';
 import { CalculationResults } from '../calculator/CalculationResults';
 import { BookingForm } from '../calculator/BookingForm';
+import { BusBookingForm } from '../calculator/BusBookingForm';
 import { BookingConfirmation } from '../calculator/BookingConfirmation';
 
 interface HeroSectionProps {
@@ -23,9 +24,9 @@ interface HeroSectionProps {
   bookingStep: BookingStep;
   bookingSending: boolean;
   bookingRefCode: string;
-  onSelectVehicle: (type: string, price: number) => void;
+  onSelectVehicle: (type: string, price: number, extra?: Partial<SelectedVehicle>) => void;
   onBackToVehicles: () => void;
-  onSubmitBooking: (formData: ClientFormData) => void;
+  onSubmitBooking: (formData: any) => void;
   onBookAnother: () => void;
 }
 
@@ -119,16 +120,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   )}
 
                   {bookingStep === 'form' && selectedVehicle && (
-                    <BookingForm
-                      selectedVehicle={selectedVehicle}
-                      result={result}
-                      from={from}
-                      to={to}
-                      passengers={passengers}
-                      onBackToVehicles={onBackToVehicles}
-                      onSubmitBooking={onSubmitBooking}
-                      bookingSending={bookingSending}
-                    />
+                    selectedVehicle.isBus ? (
+                      <BusBookingForm
+                        selectedVehicle={selectedVehicle}
+                        result={result}
+                        from={from}
+                        to={to}
+                        passengers={passengers}
+                        onBackToVehicles={onBackToVehicles}
+                        onSubmitBooking={onSubmitBooking}
+                        bookingSending={bookingSending}
+                      />
+                    ) : (
+                      <BookingForm
+                        selectedVehicle={selectedVehicle}
+                        result={result}
+                        from={from}
+                        to={to}
+                        passengers={passengers}
+                        onBackToVehicles={onBackToVehicles}
+                        onSubmitBooking={onSubmitBooking}
+                        bookingSending={bookingSending}
+                      />
+                    )
                   )}
 
                   {bookingStep === 'success' && selectedVehicle && (

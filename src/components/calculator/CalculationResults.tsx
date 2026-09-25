@@ -1,8 +1,8 @@
 import React from 'react';
 import { ArrowLeft, MapPin, Clock } from 'lucide-react';
-import { PriceResult, SelectedVehicle } from '../../types';
+import { PriceResult, SelectedVehicle, BusSpec } from '../../types';
 import { VehicleSlider } from './VehicleSlider';
-import { GroupTransferNotice } from './GroupTransferNotice';
+import { BusSlider } from './BusSlider';
 
 interface CalculationResultsProps {
   from: string;
@@ -11,7 +11,7 @@ interface CalculationResultsProps {
   result: PriceResult;
   selectedVehicle: SelectedVehicle | null;
   onModifyRoute: () => void;
-  onSelectVehicle: (type: string, price: number) => void;
+  onSelectVehicle: (type: string, price: number, extra?: Partial<SelectedVehicle>) => void;
 }
 
 export const CalculationResults: React.FC<CalculationResultsProps> = ({
@@ -23,6 +23,23 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
   onModifyRoute,
   onSelectVehicle
 }) => {
+  const isBusMode = passengers >= 9;
+
+  const handleSelectBus = (
+    bus: BusSpec,
+    clientPrice: number,
+    driverPrice: number,
+    isAirportFixed: boolean
+  ) => {
+    onSelectVehicle(bus.name, clientPrice, {
+      isBus: true,
+      busSpec: bus,
+      hourlyRate: bus.hourlyRate,
+      fixedAirportPrice: bus.fixedAirportPrice,
+      isAirportFixed
+    });
+  };
+
   return (
     <div className="text-left space-y-5 sm:space-y-6">
       {/* Route Header and Distance / Duration Stats */}
@@ -66,9 +83,16 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
         <span className="text-white font-bold">{to}</span>
       </div>
 
-      {/* Vehicle Slider or VIP Notice for 10+ passengers */}
-      {passengers >= 10 ? (
-        <GroupTransferNotice />
+      {/* Vehicle Slider or Bus Slider for 9+ passengers */}
+      {isBusMode ? (
+        <BusSlider
+          from={from}
+          to={to}
+          distanceText={result.distance}
+          passengers={passengers}
+          selectedVehicle={selectedVehicle}
+          onSelectBus={handleSelectBus}
+        />
       ) : (
         <VehicleSlider
           prices={result.prices}

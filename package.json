@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "tsx server.ts",
+    "bot": "tsx bot/driverBot.ts",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",

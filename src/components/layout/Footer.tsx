@@ -54,10 +54,11 @@ export const Footer: React.FC = () => {
 
       <div className="max-w-[1440px] mx-auto border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-white/40">
         <p>© 2026 Zephyr Transfer. Excellence in Motion. All rights reserved.</p>
-        <div className="flex gap-6">
+        <div className="flex gap-6 items-center flex-wrap">
           <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
           <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
           <a href="#" className="hover:text-white transition-colors">Chauffeur Agreement</a>
+          <a href="/admin" className="text-white/40 hover:text-[#f0a500] transition-colors font-mono">Operator Portal</a>
         </div>
       </div>
     </footer>

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "ZEP-781924",
+    "createdAt": "2026-09-24T10:15:00.000Z",
+    "status": "pending",
+    "category": "car",
+    "vehicleType": "Business Sedan",
+    "from": "Milan Malpensa Airport (MXP)",
+    "to": "Hotel Principe di Savoia, Milan",
+    "distance": "48.5 km",
+    "duration": "45 mins",
+    "passengers": 2,
+    "clientPrice": 140,
+    "driverPrice": 110,
+    "profit": 30,
+    "client": {
+      "name": "Dr. Arthur Pendelton",
+      "phone": "+44 7911 123456",
+      "email": "a.pendelton@oxford-consortium.uk",
+      "flightNotes": "Flight BA572 from LHR arriving 11:30 AM. Terminal 1."
+    }
+  },
+  {
+    "id": "ZEP-914285",
+    "createdAt": "2026-09-24T11:40:00.000Z",
+    "status": "cancelled",
+    "category": "bus",
+    "vehicleType": "Mercedes-Benz Sprinter",
+    "from": "Milan Centrale",
+    "to": "Bellagio, Lake Como",
+    "distance": "75.0 km",
+    "duration": "1 hr 20 mins",
+    "passengers": 14,
+    "clientPrice": 276,
+    "driverPrice": 240,
+    "profit": 36,
+    "client": {
+      "name": "Sofia Lindqvist",
+      "phone": "+46 70 123 45 67",
+      "email": "sofia.lindqvist@stockholm-design.se",
+      "customNotes": "Group corporate retreat. 14 suitcases + presentation stands. Need English speaking chauffeur."
+    }
+  }
+]

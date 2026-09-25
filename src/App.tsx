@@ -25,6 +25,8 @@ import { ExperienceSection } from './components/sections/ExperienceSection';
 import { DestinationsSection } from './components/sections/DestinationsSection';
 import { FleetSection } from './components/sections/FleetSection';
 import { ContactSection } from './components/sections/ContactSection';
+import { AdminLogin } from './components/admin/AdminLogin';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 
 export default function App() {
   // Transfer route & passengers state
@@ -42,6 +44,28 @@ export default function App() {
 
   // Active navigation section state
   const [activeSection, setActiveSection] = useState('hero');
+
+  // Admin route & session authentication state
+  const [isAdminRoute, setIsAdminRoute] = useState(
+    () => window.location.pathname.startsWith('/admin') || window.location.hash.startsWith('#/admin')
+  );
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(
+    () => sessionStorage.getItem('zephyr_admin_auth') === 'true'
+  );
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIsAdminRoute(
+        window.location.pathname.startsWith('/admin') || window.location.hash.startsWith('#/admin')
+      );
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, []);
 
   // DOM references
   const calculatorRef = useRef<HTMLDivElement>(null);
@@ -258,20 +282,59 @@ export default function App() {
   }, []);
 
   // Vehicle selection handler (step 1 -> step 2)
-  const handleSelectVehicle = (type: string, price: number) => {
-    setSelectedVehicle({ type, price });
+  const handleSelectVehicle = (type: string, price: number, extra?: Partial<SelectedVehicle>) => {
+    setSelectedVehicle({
+      type,
+      price,
+      ...extra
+    });
     setBookingStep('form');
   };
 
   // Booking dispatch handler (step 2 -> step 3)
-  const handleBookingSubmit = (formData: ClientFormData) => {
+  const handleBookingSubmit = async (formData: any) => {
     setBookingSending(true);
-    setTimeout(() => {
+    const code = `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
+    try {
+      const isBus = selectedVehicle?.isBus || passengers >= 9;
+      let driverPrice = selectedVehicle?.busSpec 
+        ? Math.round(selectedVehicle.price / 1.15)
+        : Math.round((selectedVehicle?.price || 0) / 1.15);
+
+      const payload = {
+        id: code,
+        from,
+        to,
+        distance: result?.distance || '45 km',
+        duration: result?.duration || '45 mins',
+        passengers,
+        vehicleType: selectedVehicle?.type || 'Executive Chauffeur',
+        isBus,
+        category: isBus ? 'bus' : 'car',
+        clientPrice: selectedVehicle?.price || 0,
+        driverPrice,
+        profit: (selectedVehicle?.price || 0) - driverPrice,
+        client: {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          flightNotes: formData.flightNotes,
+          customNotes: formData.customNotes
+        }
+      };
+
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (e) {
+      console.warn("Order dispatch sync error:", e);
+    } finally {
       setBookingSending(false);
-      const code = `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
       setBookingRefCode(code);
       setBookingStep('success');
-    }, 1000);
+    }
   };
 
   // Reset booking state
@@ -281,6 +344,29 @@ export default function App() {
     setBookingStep('vehicles');
     setBookingRefCode('');
   };
+
+  // Admin Portal Route handling (/admin or #/admin)
+  if (isAdminRoute) {
+    if (!isAdminLoggedIn) {
+      return (
+        <div className="min-h-screen bg-[#131313] text-[#e4e2e1] font-sans">
+          <AdminLogin onLoginSuccess={() => setIsAdminLoggedIn(true)} />
+        </div>
+      );
+    }
+    return (
+      <AdminDashboard
+        onLogout={() => {
+          sessionStorage.removeItem('zephyr_admin_auth');
+          setIsAdminLoggedIn(false);
+        }}
+        onGoHome={() => {
+          window.history.pushState({}, '', '/');
+          setIsAdminRoute(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#131313] text-[#e4e2e1] flex flex-col font-sans selection:bg-[#f0a500] selection:text-[#131313] overflow-x-hidden w-full max-w-full relative">

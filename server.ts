@@ -3,6 +3,13 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
+import { 
+  getOrders, 
+  saveOrders, 
+  broadcastOrder, 
+  startBotPolling, 
+  OrderRecord 
+} from "./bot/driverBot";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -292,6 +299,124 @@ async function startServer() {
     }
   });
 
+  // GET /api/orders: Retrieve all orders for Admin Portal
+  app.get("/api/orders", (req, res) => {
+    try {
+      const orders = getOrders();
+      // Sort newest first
+      orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      res.json({ success: true, orders });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/orders: Submit new booking from customer
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const body = req.body;
+      const orders = getOrders();
+
+      const orderId = body.id || `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
+      const clientPrice = Number(body.clientPrice) || 0;
+      let driverPrice = Number(body.driverPrice);
+      if (!driverPrice || isNaN(driverPrice)) {
+        driverPrice = Math.round(clientPrice / 1.15);
+      }
+      const profit = Number(body.profit) || (clientPrice - driverPrice);
+
+      const newOrder: OrderRecord = {
+        id: orderId,
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        category: body.category || (body.isBus ? 'bus' : 'car'),
+        vehicleType: body.vehicleType || 'Executive Chauffeur',
+        from: body.from || 'Milan',
+        to: body.to || 'Destination',
+        distance: body.distance || '45 km',
+        duration: body.duration || '45 mins',
+        passengers: Number(body.passengers) || 1,
+        clientPrice,
+        driverPrice,
+        profit,
+        client: {
+          name: body.client?.name || '',
+          phone: body.client?.phone || '',
+          email: body.client?.email || '',
+          flightNotes: body.client?.flightNotes,
+          customNotes: body.client?.customNotes
+        }
+      };
+
+      orders.unshift(newOrder);
+      saveOrders(orders);
+
+      // Asynchronously broadcast to Telegram driver bot
+      broadcastOrder(newOrder).catch((err) => {
+        console.warn("[Bot] Broadcast failed:", err);
+      });
+
+      res.status(201).json({ success: true, order: newOrder });
+    } catch (e: any) {
+      console.error("[Orders API] Error creating order:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // PATCH /api/orders/:id/status: Update order status from Admin Portal
+  app.patch("/api/orders/:id/status", (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const orders = getOrders();
+      const order = orders.find(o => o.id === id);
+
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      order.status = status;
+      saveOrders(orders);
+      res.json({ success: true, order });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // PATCH /api/orders/:id/take: Claim order
+  app.patch("/api/orders/:id/take", (req, res) => {
+    try {
+      const { id } = req.params;
+      const { driverName, driverPhone, driverId } = req.body;
+      const orders = getOrders();
+      const order = orders.find(o => o.id === id);
+
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      if (order.status !== 'pending') {
+        return res.status(409).json({ 
+          error: "Order already taken", 
+          takenBy: order.takenBy?.driverName 
+        });
+      }
+
+      order.status = 'taken';
+      order.takenBy = {
+        driverId: driverId || 'web_operator',
+        driverName: driverName || 'Assigned Driver',
+        driverPhone: driverPhone || '',
+        takenAt: new Date().toISOString()
+      };
+
+      saveOrders(orders);
+      res.json({ success: true, order });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -309,6 +434,10 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    // Start Telegram bot polling runner
+    startBotPolling().catch((err) => {
+      console.warn("[Telegram Bot] Init failed:", err);
+    });
   });
 }
 
