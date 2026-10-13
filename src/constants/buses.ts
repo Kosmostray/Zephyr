@@ -10,7 +10,7 @@ export const busFleet: BusSpec[] = [
     ratePerKm: 1.35,
     hourlyRate: 70,
     fixedAirportPrice: 220,
-    image: "./buses/fleet_garage.jpg",
+    image: "./buses/iveco_9pax.jpg",
     desc: "Comfortable touring minibus for small delegations & team transfers."
   },
   {
@@ -22,7 +22,7 @@ export const busFleet: BusSpec[] = [
     ratePerKm: 1.50,
     hourlyRate: 80,
     fixedAirportPrice: 220,
-    image: "./buses/fleet_garage.jpg",
+    image: "./buses/ford_12pax.jpg",
     desc: "Spacious passenger van ideal for medium groups & airport transfers."
   },
   {
@@ -58,7 +58,7 @@ export const busFleet: BusSpec[] = [
     ratePerKm: 2.50,
     hourlyRate: 110,
     fixedAirportPrice: 450,
-    image: "./buses/coach_55pax.jpg",
+    image: "./buses/volvo_55pax.jpg",
     desc: "Elite Scandinavian engineering, reclining seats & panoramic comfort."
   }
 ];

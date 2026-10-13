@@ -76,7 +76,7 @@ export const LocationInput: React.FC<LocationInputProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full mt-2 z-50 bg-[#161616]/95 backdrop-blur-2xl border border-[#f0a500]/30 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] max-h-60 overflow-y-auto p-1.5 flex flex-col gap-0.5"
+            className="absolute left-0 w-full lg:w-[320px] top-full mt-2 z-50 bg-[#161616]/95 backdrop-blur-2xl border border-[#f0a500]/30 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] max-h-64 overflow-y-auto p-1.5 flex flex-col gap-0.5"
           >
             <div className="px-3.5 py-2 text-xs sm:text-[10px] uppercase font-bold tracking-wider text-[#f0a500] border-b border-white/10 mb-1 flex items-center justify-between">
               <span>Popular Hubs & Resorts</span>

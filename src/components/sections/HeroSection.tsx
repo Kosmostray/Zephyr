@@ -52,33 +52,33 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onBookAnother
 }) => {
   return (
-    <section id="hero" className="scroll-mt-20 relative min-h-[92vh] flex items-center justify-center pt-24 sm:pt-28 pb-12 sm:pb-16 overflow-hidden">
-      <div className="absolute inset-0 z-0 overflow-hidden">
+    <section id="hero" className="scroll-mt-20 relative min-h-[90vh] flex flex-col items-center justify-center pt-24 sm:pt-28 md:pt-32 pb-20 sm:pb-24 lg:pb-32">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           className="w-full h-full object-cover object-[35%_65%] sm:object-[45%_60%] md:object-center scale-110 sm:scale-105 md:scale-100 transition-all duration-700"
           alt="Zephyr luxury Mercedes-Benz chauffeur vehicle on Italian Amalfi Coast at sunset"
           src="./hero-bg.jpg"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#131313] pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 via-65% to-[#131313]"></div>
       </div>
 
-      <div className="relative z-20 w-full max-w-[1440px] px-2.5 sm:px-6 md:px-16 flex flex-col items-center text-center">
+      <div className="relative z-20 w-full max-w-[1440px] px-3 sm:px-6 md:px-16 flex flex-col items-center text-center">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#131313]/85 backdrop-blur-2xl border border-white/20 mb-5 sm:mb-7 text-[11px] sm:text-xs md:text-sm uppercase tracking-wider sm:tracking-[0.2em] text-[#f0a500] font-semibold max-w-[94vw] shadow-2xl shadow-black/60 ring-1 ring-white/10 hover:border-[#f0a500]/50 transition-all">
+          <div className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#131313]/85 backdrop-blur-2xl border border-white/20 mb-3.5 sm:mb-5 text-[11px] sm:text-xs md:text-sm uppercase tracking-wider sm:tracking-[0.2em] text-[#f0a500] font-semibold max-w-[94vw] shadow-2xl shadow-black/60 ring-1 ring-white/10 hover:border-[#f0a500]/50 transition-all">
             <ShieldCheck size={16} className="text-[#f0a500] flex-shrink-0" />
             <span className="truncate">Premier Chauffeur Services in Italy</span>
           </div>
-          <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 sm:mb-8 text-glow max-w-5xl tracking-tight text-white leading-tight">
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 sm:mb-7 text-glow max-w-5xl tracking-tight text-white leading-tight">
             Excellence in Every Kilometre
           </h1>
         </motion.div>
 
         <div ref={calculatorRef} className="w-full max-w-5xl">
-          <div className="liquid-glass p-3.5 sm:p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-2xl border border-white/15">
+          <div className="liquid-glass p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-2xl border border-white/15">
             <AnimatePresence mode="wait">
               {!result ? (
                 <motion.div

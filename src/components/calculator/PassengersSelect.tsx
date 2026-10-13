@@ -68,7 +68,7 @@ export const PassengersSelect: React.FC<PassengersSelectProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full mt-2 z-50 bg-[#161616]/95 backdrop-blur-2xl border border-[#f0a500]/30 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] max-h-60 overflow-y-auto p-1.5 flex flex-col gap-0.5"
+            className="absolute left-0 lg:left-auto lg:right-0 w-full lg:w-[340px] top-full mt-2 z-50 bg-[#161616]/95 backdrop-blur-2xl border border-[#f0a500]/30 rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.9)] max-h-64 overflow-y-auto p-1.5 flex flex-col gap-0.5"
           >
             <div className="px-3.5 py-2 text-xs sm:text-[10px] uppercase font-bold tracking-wider text-[#f0a500] border-b border-white/10 mb-1 flex items-center justify-between">
               <span>Party Size</span>
@@ -86,17 +86,17 @@ export const PassengersSelect: React.FC<PassengersSelectProps> = ({
                     setPassengers(opt.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3.5 py-3 sm:py-2 text-sm sm:text-xs rounded-lg transition-all flex items-center justify-between group cursor-pointer active:bg-[#f0a500]/25 ${
+                  className={`w-full text-left px-3.5 py-2.5 text-xs rounded-lg transition-all flex items-center justify-between gap-3 group cursor-pointer active:bg-[#f0a500]/25 ${
                     isSelected
                       ? 'bg-[#f0a500]/20 text-[#f0a500] font-bold border border-[#f0a500]/40'
                       : 'text-white/95 hover:text-[#f0a500] hover:bg-[#f0a500]/15'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Users size={14} className={isSelected ? 'text-[#f0a500]' : 'text-white/40 group-hover:text-[#f0a500]'} />
-                    <span>{opt.label}</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Users size={14} className={`shrink-0 ${isSelected ? 'text-[#f0a500]' : 'text-white/40 group-hover:text-[#f0a500]'}`} />
+                    <span className="whitespace-nowrap font-medium">{opt.label}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-white/40 group-hover:text-white/60">
+                  <span className="text-[10px] font-mono text-white/50 group-hover:text-white/70 shrink-0 text-right">
                     {opt.desc}
                   </span>
                 </button>

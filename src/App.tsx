@@ -243,11 +243,16 @@ export default function App() {
     }
   };
 
-  // Smooth scroll to calculator box
+  // Smooth scroll to calculator / hero section
   const scrollToCalculator = () => {
-    if (calculatorRef.current) {
+    const heroEl = document.getElementById('hero');
+    if (heroEl) {
       setTimeout(() => {
-        calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        heroEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    } else if (calculatorRef.current) {
+      setTimeout(() => {
+        calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 60);
     }
   };

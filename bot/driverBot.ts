@@ -103,7 +103,19 @@ async function callTelegram(method: string, body: Record<string, any>): Promise<
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    return await res.json();
+    const data = await res.json();
+    if (!data.ok && typeof data.description === 'string' && data.description.includes("can't parse entities") && body.parse_mode) {
+      // Retry without markdown if user address or names contain characters that trip Telegram markdown
+      const retryBody = { ...body };
+      delete retryBody.parse_mode;
+      const retryRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(retryBody)
+      });
+      return await retryRes.json();
+    }
+    return data;
   } catch (e) {
     console.error(`[Bot] Error calling Telegram ${method}:`, e);
     return null;
@@ -237,13 +249,6 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
   orders[orderIndex] = order;
   saveOrders(orders);
 
-  // Notify driver of success
-  await callTelegram('answerCallbackQuery', {
-    callback_query_id: queryId,
-    text: '🎉 Вітаємо! Ви успішно взяли це замовлення!',
-    show_alert: true
-  });
-
   // Edit original message to remove button and stamp winner
   if (message?.chat?.id && message?.message_id) {
     await callTelegram('editMessageText', {
@@ -272,10 +277,21 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `Гарної поїздки та відмінного сервісу! 🌟`;
 
-  await callTelegram('sendMessage', {
+  const dmResult = await callTelegram('sendMessage', {
     chat_id: from.id,
     text: confirmationText,
     parse_mode: 'Markdown'
+  });
+
+  const sentPrivate = dmResult && dmResult.ok;
+
+  // Answer callback query with informative alert
+  await callTelegram('answerCallbackQuery', {
+    callback_query_id: queryId,
+    text: sentPrivate
+      ? '🎉 Вітаємо! Ви успішно взяли це замовлення. Деталі клієнта надіслано вам в особисті повідомлення!'
+      : '🎉 Вітаємо! Ви взяли замовлення. Будь ласка, відкрийте діалог із ботом @Legkovie_bot і натисніть /start, щоб отримати контакти клієнта!',
+    show_alert: true
   });
 }
 
@@ -384,6 +400,16 @@ export async function startBotPolling(): Promise<void> {
   }
 
   console.log('[Telegram Bot] Connecting to Telegram API...');
+  const me = await callTelegram('getMe', {});
+  if (me && me.ok) {
+    console.log(`[Telegram Bot] Connected successfully as @${me.result.username} (${me.result.first_name})`);
+    if (CHAT_ID) {
+      console.log(`[Telegram Bot] Configured driver group Chat ID: ${CHAT_ID}`);
+    }
+  } else {
+    console.warn('[Telegram Bot] Warning: Unable to verify bot with Telegram API:', me);
+  }
+
   let offset = 0;
 
   const poll = async () => {

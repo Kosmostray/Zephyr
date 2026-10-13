@@ -29,7 +29,7 @@ export const CalculatorForm: React.FC<CalculatorFormProps> = ({
   const [passengersOpen, setPassengersOpen] = useState(false);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 items-end">
       {/* Pick-up Location */}
       <LocationInput
         label="Pick-up Location"
