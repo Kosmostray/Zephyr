@@ -1,6 +1,7 @@
 import React from 'react';
 import { Users, Clock, Plane, CheckCircle2 } from 'lucide-react';
 import { BusSpec } from '../../types';
+import { getClientHourlyRate, getClientAirportPrice } from '../../constants/buses';
 
 interface BusCardProps {
   bus: BusSpec;
@@ -70,7 +71,7 @@ export const BusCard: React.FC<BusCardProps> = ({
               <span>Hourly Rate</span>
             </div>
             <div className="mt-1 font-mono text-base sm:text-lg font-bold text-white">
-              €{bus.hourlyRate}<span className="text-xs sm:text-sm text-white/50 font-normal"> / hr</span>
+              €{getClientHourlyRate(bus)}<span className="text-xs sm:text-sm text-white/50 font-normal"> / hr</span>
             </div>
           </div>
 
@@ -81,7 +82,7 @@ export const BusCard: React.FC<BusCardProps> = ({
               <span>Milan Airport</span>
             </div>
             <div className="mt-1 font-mono text-base sm:text-lg font-bold text-[#f0a500]">
-              €{bus.fixedAirportPrice}<span className="text-xs sm:text-sm text-white/50 font-normal"> fixed</span>
+              €{getClientAirportPrice(bus)}<span className="text-xs sm:text-sm text-white/50 font-normal"> fixed</span>
             </div>
           </div>
         </div>

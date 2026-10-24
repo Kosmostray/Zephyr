@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, MapPin, Clock } from 'lucide-react';
 import { PriceResult, SelectedVehicle, BusSpec } from '../../types';
+import { getClientHourlyRate, getClientAirportPrice } from '../../constants/buses';
 import { VehicleSlider } from './VehicleSlider';
 import { BusSlider } from './BusSlider';
 
@@ -34,8 +35,8 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
     onSelectVehicle(bus.name, clientPrice, {
       isBus: true,
       busSpec: bus,
-      hourlyRate: bus.hourlyRate,
-      fixedAirportPrice: bus.fixedAirportPrice,
+      hourlyRate: getClientHourlyRate(bus),
+      fixedAirportPrice: getClientAirportPrice(bus),
       isAirportFixed
     });
   };

@@ -63,6 +63,11 @@ export const busFleet: BusSpec[] = [
   }
 ];
 
+export const BUS_CLIENT_MARKUP = 1.13;
+
+export const getClientHourlyRate = (bus: BusSpec): number => Math.round(bus.hourlyRate * BUS_CLIENT_MARKUP);
+export const getClientAirportPrice = (bus: BusSpec): number => Math.round(bus.fixedAirportPrice * BUS_CLIENT_MARKUP);
+
 export const isAirportTransfer = (from: string, to: string): boolean => {
   const f = from.toLowerCase();
   const t = to.toLowerCase();
@@ -81,14 +86,14 @@ export const calculateBusPrice = (
 ): { driverPrice: number; clientPrice: number; isAirportFixed: boolean } => {
   if (isAirportTransfer(from, to)) {
     const driverPrice = bus.fixedAirportPrice;
-    const clientPrice = Math.round(driverPrice * 1.15);
+    const clientPrice = Math.round(driverPrice * BUS_CLIENT_MARKUP);
     return { driverPrice, clientPrice, isAirportFixed: true };
   }
 
   // Minimum charge equals the fixed airport price
   const baseCalc = Math.round(distanceKm * 2 * bus.ratePerKm);
   const driverPrice = Math.max(bus.fixedAirportPrice, baseCalc);
-  const clientPrice = Math.round(driverPrice * 1.15);
+  const clientPrice = Math.round(driverPrice * BUS_CLIENT_MARKUP);
 
   return { driverPrice, clientPrice, isAirportFixed: false };
 };

@@ -302,8 +302,8 @@ export default function App() {
     const code = `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
     try {
       const isBus = selectedVehicle?.isBus || passengers >= 9;
-      let driverPrice = selectedVehicle?.busSpec 
-        ? Math.round(selectedVehicle.price / 1.15)
+      let driverPrice = isBus 
+        ? Math.round((selectedVehicle?.price || 0) / 1.13)
         : Math.round((selectedVehicle?.price || 0) / 1.15);
 
       const payload = {

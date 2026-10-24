@@ -4,6 +4,7 @@ import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { SelectedVehicle, PriceResult, BusFormData, BusFormErrors } from '../../types';
+import { getClientHourlyRate } from '../../constants/buses';
 
 interface BusBookingFormProps {
   selectedVehicle: SelectedVehicle;
@@ -168,7 +169,7 @@ export const BusBookingForm: React.FC<BusBookingFormProps> = ({
           </div>
           {busSpec?.hourlyRate && (
             <span className="text-xs text-white/60 font-mono mt-0.5">
-              €{busSpec.hourlyRate}/hr standby & sightseeing
+              €{getClientHourlyRate(busSpec)}/hr standby & sightseeing
             </span>
           )}
         </div>

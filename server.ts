@@ -318,10 +318,11 @@ async function startServer() {
       const orders = getOrders();
 
       const orderId = body.id || `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
+      const isBus = body.category === 'bus' || body.isBus;
       const clientPrice = Number(body.clientPrice) || 0;
       let driverPrice = Number(body.driverPrice);
       if (!driverPrice || isNaN(driverPrice)) {
-        driverPrice = Math.round(clientPrice / 1.15);
+        driverPrice = Math.round(clientPrice / (isBus ? 1.13 : 1.15));
       }
       const profit = Number(body.profit) || (clientPrice - driverPrice);
 
