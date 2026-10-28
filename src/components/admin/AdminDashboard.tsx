@@ -369,6 +369,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onGoHo
                       </div>
                     </div>
 
+                    {/* Payment details badge */}
+                    {order.payment?.type && (
+                      <div className="text-center">
+                        {order.payment.type === 'deposit_30' ? (
+                          <span className="inline-block text-[11px] font-mono text-[#f0a500] bg-[#f0a500]/10 px-2.5 py-1 rounded-md border border-[#f0a500]/30">
+                            Stripe 30% Deposit (€{order.payment.amountPaid}) · Bal: €{order.payment.remainingCash} cash
+                          </span>
+                        ) : (
+                          <span className="inline-block text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                            Stripe 100% Fully Paid (€{order.payment.amountPaid})
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {/* Action buttons */}
                     <div className="flex items-center gap-2">
                       {order.status === 'pending' && (

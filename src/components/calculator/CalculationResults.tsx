@@ -9,6 +9,7 @@ interface CalculationResultsProps {
   from: string;
   to: string;
   passengers: number;
+  luggage?: number;
   result: PriceResult;
   selectedVehicle: SelectedVehicle | null;
   onModifyRoute: () => void;
@@ -19,6 +20,7 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
   from,
   to,
   passengers,
+  luggage = 2,
   result,
   selectedVehicle,
   onModifyRoute,
@@ -35,6 +37,7 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
     onSelectVehicle(bus.name, clientPrice, {
       isBus: true,
       busSpec: bus,
+      driverPrice,
       hourlyRate: getClientHourlyRate(bus),
       fixedAirportPrice: getClientAirportPrice(bus),
       isAirportFixed
@@ -77,11 +80,18 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
         </div>
       </div>
 
-      {/* From -> To display */}
-      <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-lg font-medium px-1 flex-wrap">
-        <span className="text-white font-bold">{from}</span>
-        <span className="text-[#f0a500] font-bold text-base sm:text-xl">➔</span>
-        <span className="text-white font-bold">{to}</span>
+      {/* From -> To display and passengers/luggage badge */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 text-sm sm:text-lg font-medium px-1 flex-wrap">
+          <span className="text-white font-bold">{from}</span>
+          <span className="text-[#f0a500] font-bold text-base sm:text-xl">➔</span>
+          <span className="text-white font-bold">{to}</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs font-mono text-[#f0a500] bg-black/50 px-3 py-1.5 rounded-lg border border-white/10">
+          <span>👥 {passengers} Pax</span>
+          <span className="text-white/30">·</span>
+          <span>🧳 {luggage} Bags</span>
+        </div>
       </div>
 
       {/* Vehicle Slider or Bus Slider for 9+ passengers */}
@@ -97,7 +107,9 @@ export const CalculationResults: React.FC<CalculationResultsProps> = ({
       ) : (
         <VehicleSlider
           prices={result.prices}
+          driverPrices={result.driverPrices}
           passengers={passengers}
+          luggage={luggage}
           selectedVehicle={selectedVehicle}
           onSelectVehicle={onSelectVehicle}
         />

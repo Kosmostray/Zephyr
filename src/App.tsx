@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { PriceResult, SelectedVehicle, BookingStep, ClientFormData } from './types';
+import { PriceResult, SelectedVehicle, BookingStep, ClientFormData, PaymentOption } from './types';
 import {
   detectOrigin,
   detectDestination,
@@ -33,14 +33,17 @@ export default function App() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [passengers, setPassengers] = useState(1);
+  const [luggage, setLuggage] = useState(2);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PriceResult | null>(null);
 
   // Booking process state
   const [selectedVehicle, setSelectedVehicle] = useState<SelectedVehicle | null>(null);
   const [bookingStep, setBookingStep] = useState<BookingStep>('vehicles');
-  const [bookingSending, setBookingSending] = useState(false);
+  const [bookingSending, setBookingSending] = useState<boolean | PaymentOption>(false);
   const [bookingRefCode, setBookingRefCode] = useState('');
+  const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
+  const [paymentVerificationLoading, setPaymentVerificationLoading] = useState(false);
 
   // Active navigation section state
   const [activeSection, setActiveSection] = useState('hero');
@@ -197,6 +200,7 @@ export default function App() {
         distance: element?.distance?.text || "45.0 km",
         duration: element?.duration?.text || "45 mins",
         prices: priceResult.prices,
+        driverPrices: priceResult.driverPrices,
         formatSpecial: priceResult.formatSpecial
       });
       setSelectedVehicle(null);
@@ -225,6 +229,45 @@ export default function App() {
         setTimeout(() => {
           calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
+      }
+    } catch (e) {
+      console.warn("Could not parse query params", e);
+    }
+  }, []);
+
+  // Check Stripe Checkout return (success or cancel)
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isSuccess = searchParams.get('booking_success') === 'true';
+      const sessionId = searchParams.get('session_id');
+      const isCancelled = searchParams.get('booking_cancelled') === 'true';
+
+      if (isSuccess && sessionId) {
+        setPaymentVerificationLoading(true);
+        fetch(`/api/verify-payment?session_id=${encodeURIComponent(sessionId)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.order) {
+              setConfirmedOrder(data.order);
+              setBookingRefCode(data.order.id);
+              setBookingStep('success');
+              // Scroll to calculator
+              setTimeout(() => {
+                calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 400);
+              // Clean URL query params without reloading
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          })
+          .catch((err) => {
+            console.error("Payment verification network error:", err);
+          })
+          .finally(() => {
+            setPaymentVerificationLoading(false);
+          });
+      } else if (isCancelled) {
+        window.history.replaceState({}, '', window.location.pathname);
       }
     } catch (e) {
       console.warn("Could not parse query params", e);
@@ -296,15 +339,17 @@ export default function App() {
     setBookingStep('form');
   };
 
-  // Booking dispatch handler (step 2 -> step 3)
-  const handleBookingSubmit = async (formData: any) => {
-    setBookingSending(true);
+  // Booking dispatch handler (step 2 -> step 3 via Stripe Checkout)
+  const handleBookingSubmit = async (formData: any, paymentOption: PaymentOption = 'deposit_30') => {
+    setBookingSending(paymentOption);
     const code = `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
     try {
       const isBus = selectedVehicle?.isBus || passengers >= 9;
-      let driverPrice = isBus 
-        ? Math.round((selectedVehicle?.price || 0) / 1.13)
-        : Math.round((selectedVehicle?.price || 0) / 1.15);
+      const driverPrice = selectedVehicle?.driverPrice ?? (
+        isBus 
+          ? Math.round((selectedVehicle?.price || 0) / 1.13)
+          : Math.round((selectedVehicle?.price || 0) / 1.12)
+      );
 
       const payload = {
         id: code,
@@ -313,12 +358,14 @@ export default function App() {
         distance: result?.distance || '45 km',
         duration: result?.duration || '45 mins',
         passengers,
+        luggage,
         vehicleType: selectedVehicle?.type || 'Executive Chauffeur',
         isBus,
         category: isBus ? 'bus' : 'car',
         clientPrice: selectedVehicle?.price || 0,
         driverPrice,
         profit: (selectedVehicle?.price || 0) - driverPrice,
+        paymentOption,
         client: {
           name: formData.name,
           phone: formData.phone,
@@ -328,17 +375,23 @@ export default function App() {
         }
       };
 
-      await fetch('/api/orders', {
+      const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Failed to initialize payment gateway.');
+        setBookingSending(false);
+      }
     } catch (e) {
-      console.warn("Order dispatch sync error:", e);
-    } finally {
+      console.warn("Order checkout error:", e);
+      alert('Network error connecting to payment gateway.');
       setBookingSending(false);
-      setBookingRefCode(code);
-      setBookingStep('success');
     }
   };
 
@@ -346,6 +399,7 @@ export default function App() {
   const handleBookAnother = () => {
     setResult(null);
     setSelectedVehicle(null);
+    setConfirmedOrder(null);
     setBookingStep('vehicles');
     setBookingRefCode('');
   };
@@ -392,6 +446,8 @@ export default function App() {
           setTo={setTo}
           passengers={passengers}
           setPassengers={setPassengers}
+          luggage={luggage}
+          setLuggage={setLuggage}
           loading={loading}
           result={result}
           onCalculate={() => handleCalculate()}
@@ -404,6 +460,8 @@ export default function App() {
           bookingStep={bookingStep}
           bookingSending={bookingSending}
           bookingRefCode={bookingRefCode}
+          confirmedOrder={confirmedOrder}
+          paymentVerificationLoading={paymentVerificationLoading}
           onSelectVehicle={handleSelectVehicle}
           onBackToVehicles={() => setBookingStep('vehicles')}
           onSubmitBooking={handleBookingSubmit}

@@ -17,12 +17,14 @@ export interface PriceResult {
   distance: string;
   duration: string;
   prices: Record<string, number>;
+  driverPrices?: Record<string, number>;
   formatSpecial?: boolean;
 }
 
 export interface SelectedVehicle {
   type: string;
   price: number;
+  driverPrice?: number;
   isBus?: boolean;
   busSpec?: BusSpec;
   hourlyRate?: number;
@@ -31,6 +33,17 @@ export interface SelectedVehicle {
 }
 
 export type BookingStep = 'vehicles' | 'form' | 'success';
+
+export type PaymentOption = 'deposit_30' | 'full';
+
+export interface OrderPaymentInfo {
+  type: PaymentOption;
+  amountPaid: number;
+  remainingCash: number;
+  stripeSessionId?: string;
+  stripePaymentIntent?: string;
+  paidAt?: string;
+}
 
 export interface ClientFormData {
   name: string;

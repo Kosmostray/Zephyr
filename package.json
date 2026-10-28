@@ -24,6 +24,7 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-international-phone": "^4.8.0",
+    "stripe": "^23.0.1",
     "vite": "^6.2.3"
   },
   "devDependencies": {

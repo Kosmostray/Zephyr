@@ -226,10 +226,12 @@ export const matchSkiFixedRoute = (fromStr: any, toStr: any) => {
   if (origin && dest && (tariffsData.tables as any)[origin]?.destinations?.[dest]) {
     const pricesObj = (tariffsData.tables as any)[origin].destinations[dest].prices;
     const displayPrices: Record<string, number> = {};
+    const driverPrices: Record<string, number> = {};
     for (const carType in pricesObj) {
       displayPrices[carType] = pricesObj[carType].calc;
+      driverPrices[carType] = pricesObj[carType].base;
     }
-    return displayPrices;
+    return { prices: displayPrices, driverPrices };
   }
 
   return null;
@@ -260,17 +262,20 @@ export const calculateTransferPrices = (from: any, to: any, distance: number) =>
   const safeFrom = typeof from === 'string' ? from.trim() : '';
   const safeTo = typeof to === 'string' ? to.trim() : '';
 
-  // 1. Check Fixed Ski Resort Routes from the official PDF and Excel tables (uses +15% calc price directly)
-  const skiPrices = matchSkiFixedRoute(safeFrom, safeTo);
-  if (skiPrices) {
-    return { prices: skiPrices, formatSpecial: true };
+  // 1. Check Fixed Ski Resort Routes from the official PDF and Excel tables
+  const skiMatch = matchSkiFixedRoute(safeFrom, safeTo);
+  if (skiMatch) {
+    return { prices: skiMatch.prices, driverPrices: skiMatch.driverPrices, formatSpecial: true };
   }
 
   const routeKey = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
 
   // 2. Check Fixed Special Alpine Routes (e.g. Pontresina)
   if (fixedSpecialRoutes[routeKey]) {
-    return { prices: fixedSpecialRoutes[routeKey], formatSpecial: true };
+    const prices = fixedSpecialRoutes[routeKey];
+    const driverPrices: Record<string, number> = {};
+    for (const k in prices) driverPrices[k] = Math.round(prices[k] / 1.12);
+    return { prices, driverPrices, formatSpecial: true };
   }
 
   const fromLower = safeFrom.toLowerCase();
@@ -280,13 +285,25 @@ export const calculateTransferPrices = (from: any, to: any, distance: number) =>
   // 3. Check Predefined Italian Airport Routes from Table
   const predefined = matchPredefinedRoute(safeFrom, safeTo);
   if (predefined) {
-    return { prices: predefined, formatSpecial: isSpecial };
+    const driverPrices: Record<string, number> = {};
+    for (const k in predefined) driverPrices[k] = Math.round(predefined[k] / 1.12);
+    return { prices: predefined, driverPrices, formatSpecial: isSpecial };
   }
 
   const routeKey1 = `${normalizeKey(safeFrom)}-${normalizeKey(safeTo)}`;
   const routeKey2 = `${normalizeKey(safeTo)}-${normalizeKey(safeFrom)}`;
-  if (predefinedRoutes[routeKey1]) return { prices: predefinedRoutes[routeKey1], formatSpecial: isSpecial };
-  if (predefinedRoutes[routeKey2]) return { prices: predefinedRoutes[routeKey2], formatSpecial: isSpecial };
+  if (predefinedRoutes[routeKey1]) {
+    const prices = predefinedRoutes[routeKey1];
+    const driverPrices: Record<string, number> = {};
+    for (const k in prices) driverPrices[k] = Math.round(prices[k] / 1.12);
+    return { prices, driverPrices, formatSpecial: isSpecial };
+  }
+  if (predefinedRoutes[routeKey2]) {
+    const prices = predefinedRoutes[routeKey2];
+    const driverPrices: Record<string, number> = {};
+    for (const k in prices) driverPrices[k] = Math.round(prices[k] / 1.12);
+    return { prices, driverPrices, formatSpecial: isSpecial };
+  }
 
   // 4. General Distance-Based Calculation
   const airportList = ["malpensa", "bergamo", "linate", "caravaggio"];
@@ -308,6 +325,7 @@ export const calculateTransferPrices = (from: any, to: any, distance: number) =>
   }
 
   const calculatedPrices: any = {};
+  const calculatedDriverPrices: any = {};
   for (const key in rates) {
     let basePrice = finalDistance * rates[key];
     if (isSpecial && !isSurcharged) {
@@ -315,7 +333,8 @@ export const calculateTransferPrices = (from: any, to: any, distance: number) =>
     }
     let priceWithVat = basePrice * 1.12;
     calculatedPrices[key] = Math.round(priceWithVat);
+    calculatedDriverPrices[key] = Math.round(basePrice);
   }
 
-  return { prices: calculatedPrices, formatSpecial: isSpecial };
+  return { prices: calculatedPrices, driverPrices: calculatedDriverPrices, formatSpecial: isSpecial };
 };

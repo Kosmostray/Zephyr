@@ -4,28 +4,41 @@ import { VehicleCard } from './VehicleCard';
 
 interface VehicleSliderProps {
   prices: Record<string, number>;
+  driverPrices?: Record<string, number>;
   passengers: number;
+  luggage?: number;
   selectedVehicle: { type: string; price: number } | null;
-  onSelectVehicle: (type: string, price: number) => void;
+  onSelectVehicle: (type: string, price: number, extra?: any) => void;
 }
 
 export const VehicleSlider: React.FC<VehicleSliderProps> = ({
   prices,
+  driverPrices,
   passengers,
+  luggage = 2,
   selectedVehicle,
   onSelectVehicle
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
 
+  const requiresVan = passengers >= 5 || luggage > 4;
+
   const vehicleEntries = Object.entries(prices).filter(([type]) => {
-    if (passengers >= 5) {
+    if (requiresVan) {
       return ["Standard Van", "Business Van", "Business Van Plus", "Minibus 10 pax"].includes(type);
     }
     return true;
   });
 
   return (
-    <div className="relative group/slider">
+    <div className="space-y-2">
+      {requiresVan && luggage > 4 && passengers < 5 && (
+        <div className="flex items-center gap-2 text-xs font-mono text-[#f0a500] bg-[#f0a500]/10 border border-[#f0a500]/30 px-3.5 py-1.5 rounded-xl w-fit">
+          <span>🧳 {luggage} Bags selected: Minivans shown automatically (Sedan capacity max 4 bags)</span>
+        </div>
+      )}
+
+      <div className="relative group/slider">
       <button
         type="button"
         onClick={() => listRef.current?.scrollBy({ left: -320, behavior: 'smooth' })}
@@ -47,7 +60,10 @@ export const VehicleSlider: React.FC<VehicleSliderProps> = ({
             price={price}
             passengers={passengers}
             isSelected={selectedVehicle?.type === type}
-            onSelect={onSelectVehicle}
+            onSelect={(t, p) => {
+              const driverPrice = driverPrices?.[t] ?? Math.round(p / 1.12);
+              onSelectVehicle(t, p, { driverPrice });
+            }}
           />
         ))}
       </div>
@@ -61,5 +77,6 @@ export const VehicleSlider: React.FC<VehicleSliderProps> = ({
         <ChevronRight size={20} className="sm:w-[22px] sm:h-[22px]" />
       </button>
     </div>
+  </div>
   );
 };

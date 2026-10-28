@@ -16,17 +16,21 @@ interface HeroSectionProps {
   setTo: (val: string) => void;
   passengers: number;
   setPassengers: (val: number) => void;
+  luggage: number;
+  setLuggage: (val: number) => void;
   loading: boolean;
   result: PriceResult | null;
   onCalculate: () => void;
   onModifyRoute: () => void;
   selectedVehicle: SelectedVehicle | null;
   bookingStep: BookingStep;
-  bookingSending: boolean;
+  bookingSending: boolean | any;
   bookingRefCode: string;
+  confirmedOrder?: any;
+  paymentVerificationLoading?: boolean;
   onSelectVehicle: (type: string, price: number, extra?: Partial<SelectedVehicle>) => void;
   onBackToVehicles: () => void;
-  onSubmitBooking: (formData: any) => void;
+  onSubmitBooking: (formData: any, paymentOption: any) => void;
   onBookAnother: () => void;
 }
 
@@ -38,6 +42,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   setTo,
   passengers,
   setPassengers,
+  luggage,
+  setLuggage,
   loading,
   result,
   onCalculate,
@@ -46,6 +52,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   bookingStep,
   bookingSending,
   bookingRefCode,
+  confirmedOrder,
+  paymentVerificationLoading,
   onSelectVehicle,
   onBackToVehicles,
   onSubmitBooking,
@@ -95,6 +103,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     setTo={setTo}
                     passengers={passengers}
                     setPassengers={setPassengers}
+                    luggage={luggage}
+                    setLuggage={setLuggage}
                     loading={loading}
                     onCalculate={onCalculate}
                   />
@@ -107,53 +117,68 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.35 }}
                 >
-                  {bookingStep === 'vehicles' && (
-                    <CalculationResults
-                      from={from}
-                      to={to}
-                      passengers={passengers}
-                      result={result}
-                      selectedVehicle={selectedVehicle}
-                      onModifyRoute={onModifyRoute}
-                      onSelectVehicle={onSelectVehicle}
-                    />
-                  )}
+                  {paymentVerificationLoading ? (
+                    <div className="py-12 px-6 text-center space-y-4">
+                      <div className="w-12 h-12 border-4 border-[#f0a500]/30 border-t-[#f0a500] rounded-full animate-spin mx-auto"></div>
+                      <h4 className="text-xl font-bold text-white font-serif">Verifying Stripe Payment...</h4>
+                      <p className="text-white/60 text-xs sm:text-sm font-mono max-w-sm mx-auto">
+                        Please wait a moment while we register your reservation with our VIP dispatch desk.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {bookingStep === 'vehicles' && (
+                        <CalculationResults
+                          from={from}
+                          to={to}
+                          passengers={passengers}
+                          luggage={luggage}
+                          result={result}
+                          selectedVehicle={selectedVehicle}
+                          onModifyRoute={onModifyRoute}
+                          onSelectVehicle={onSelectVehicle}
+                        />
+                      )}
 
-                  {bookingStep === 'form' && selectedVehicle && (
-                    selectedVehicle.isBus ? (
-                      <BusBookingForm
-                        selectedVehicle={selectedVehicle}
-                        result={result}
-                        from={from}
-                        to={to}
-                        passengers={passengers}
-                        onBackToVehicles={onBackToVehicles}
-                        onSubmitBooking={onSubmitBooking}
-                        bookingSending={bookingSending}
-                      />
-                    ) : (
-                      <BookingForm
-                        selectedVehicle={selectedVehicle}
-                        result={result}
-                        from={from}
-                        to={to}
-                        passengers={passengers}
-                        onBackToVehicles={onBackToVehicles}
-                        onSubmitBooking={onSubmitBooking}
-                        bookingSending={bookingSending}
-                      />
-                    )
-                  )}
+                      {bookingStep === 'form' && selectedVehicle && (
+                        selectedVehicle.isBus ? (
+                          <BusBookingForm
+                            selectedVehicle={selectedVehicle}
+                            result={result}
+                            from={from}
+                            to={to}
+                            passengers={passengers}
+                            onBackToVehicles={onBackToVehicles}
+                            onSubmitBooking={onSubmitBooking}
+                            bookingSending={bookingSending}
+                          />
+                        ) : (
+                          <BookingForm
+                            selectedVehicle={selectedVehicle}
+                            result={result}
+                            from={from}
+                            to={to}
+                            passengers={passengers}
+                            luggage={luggage}
+                            onBackToVehicles={onBackToVehicles}
+                            onSubmitBooking={onSubmitBooking}
+                            bookingSending={bookingSending}
+                          />
+                        )
+                      )}
 
-                  {bookingStep === 'success' && selectedVehicle && (
-                    <BookingConfirmation
-                      bookingRefCode={bookingRefCode}
-                      selectedVehicle={selectedVehicle}
-                      result={result}
-                      from={from}
-                      to={to}
-                      onBookAnother={onBookAnother}
-                    />
+                      {bookingStep === 'success' && (
+                        <BookingConfirmation
+                          bookingRefCode={bookingRefCode}
+                          selectedVehicle={selectedVehicle}
+                          result={result}
+                          from={from}
+                          to={to}
+                          confirmedOrder={confirmedOrder}
+                          onBookAnother={onBookAnother}
+                        />
+                      )}
+                    </>
                   )}
                 </motion.div>
               )}

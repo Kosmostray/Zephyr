@@ -1,8 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import { createServer as createViteServer } from "vite";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import Stripe from "stripe";
 import { 
   getOrders, 
   saveOrders, 
@@ -10,8 +12,147 @@ import {
   startBotPolling, 
   OrderRecord 
 } from "./bot/driverBot";
+import { sendBookingConfirmationEmail } from "./services/emailService";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2025-02-24.acacia" as any
+});
+
+const PENDING_ORDERS_FILE = path.join(__dirname, "data/pending_orders.json");
+
+function getPendingOrders(): Record<string, OrderRecord> {
+  try {
+    if (!fs.existsSync(PENDING_ORDERS_FILE)) return {};
+    const raw = fs.readFileSync(PENDING_ORDERS_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePendingOrders(orders: Record<string, OrderRecord>): void {
+  try {
+    const dir = path.dirname(PENDING_ORDERS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(PENDING_ORDERS_FILE, JSON.stringify(orders, null, 2), "utf-8");
+  } catch (e) {
+    console.error("[Stripe] Error saving pending orders:", e);
+  }
+}
+
+async function finalizePaidOrder(sessionId: string): Promise<{
+  success: boolean;
+  order?: OrderRecord;
+  alreadyProcessed?: boolean;
+  error?: string;
+}> {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session || session.payment_status !== "paid") {
+      return { success: false, error: "Payment not completed" };
+    }
+
+    const orders = getOrders();
+    const existing = orders.find(
+      (o) => o.payment?.stripeSessionId === sessionId || o.id === session.metadata?.orderId
+    );
+    if (existing) {
+      return { success: true, order: existing, alreadyProcessed: true };
+    }
+
+    const pendingOrders = getPendingOrders();
+    let order = pendingOrders[sessionId];
+    if (!order && session.metadata?.orderId) {
+      order = Object.values(pendingOrders).find((o) => o.id === session.metadata?.orderId);
+    }
+
+    if (!order) {
+      const meta = session.metadata || {};
+      const amountPaid = (session.amount_total || 0) / 100;
+      const orderId = meta.orderId || `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
+      const clientPrice = Number(meta.clientPrice) || amountPaid;
+      const paymentType = (meta.paymentOption as "deposit_30" | "full") || "deposit_30";
+      const remainingCash = Number(meta.remainingCash) || 0;
+      const driverPrice = Number(meta.driverPrice) || Math.round(clientPrice / 1.12);
+      const luggage = Number(meta.luggage) || 2;
+
+      order = {
+        id: orderId,
+        createdAt: new Date().toISOString(),
+        status: "pending",
+        category: (meta.category as "car" | "bus") || "car",
+        vehicleType: meta.vehicleType || "Executive Chauffeur",
+        from: meta.from || "Milan",
+        to: meta.to || "Destination",
+        distance: meta.distance || "45 km",
+        duration: meta.duration || "45 mins",
+        passengers: Number(meta.passengers) || 1,
+        luggage,
+        clientPrice,
+        driverPrice,
+        profit: clientPrice - driverPrice,
+        payment: {
+          type: paymentType,
+          amountPaid,
+          remainingCash,
+          stripeSessionId: sessionId,
+          stripePaymentIntent: typeof session.payment_intent === "string" ? session.payment_intent : undefined,
+          paidAt: new Date().toISOString()
+        },
+        client: {
+          name: session.customer_details?.name || meta.clientName || "Valued Guest",
+          email: session.customer_details?.email || session.customer_email || meta.clientEmail || "",
+          phone: session.customer_details?.phone || meta.clientPhone || "",
+          flightNotes: meta.flightNotes,
+          customNotes: meta.customNotes
+        }
+      };
+    } else {
+      order.payment = {
+        type: (order.payment?.type as "deposit_30" | "full") || "deposit_30",
+        amountPaid: (session.amount_total || 0) / 100,
+        remainingCash: order.payment?.remainingCash || 0,
+        stripeSessionId: sessionId,
+        stripePaymentIntent: typeof session.payment_intent === "string" ? session.payment_intent : undefined,
+        paidAt: new Date().toISOString()
+      };
+    }
+
+    // Save into active orders
+    orders.unshift(order);
+    saveOrders(orders);
+
+    // Remove from pending
+    delete pendingOrders[sessionId];
+    if (session.metadata?.orderId) {
+      for (const k in pendingOrders) {
+        if (pendingOrders[k].id === session.metadata.orderId) delete pendingOrders[k];
+      }
+    }
+    savePendingOrders(pendingOrders);
+
+    console.log(
+      `[Stripe Checkout] Order ${order.id} verified & paid (€${order.payment.amountPaid}). Dispatching notifications...`
+    );
+
+    // Broadcast to Telegram driver bot & driver group
+    broadcastOrder(order).catch((err) => {
+      console.warn("[Telegram Bot] Broadcast failed:", err);
+    });
+
+    // Send confirmation email to client via Resend
+    sendBookingConfirmationEmail(order).catch((err) => {
+      console.warn("[Resend Email] Dispatch failed:", err);
+    });
+
+    return { success: true, order, alreadyProcessed: false };
+  } catch (e: any) {
+    console.error("[Stripe Finalize Error]:", e);
+    return { success: false, error: e.message };
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -311,6 +452,155 @@ async function startServer() {
     }
   });
 
+  // POST /api/create-checkout-session: Initialize Stripe Checkout for 30% prepayment or full payment
+  app.post("/api/create-checkout-session", async (req, res) => {
+    try {
+      const body = req.body;
+      const orderId = body.id || `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
+      const isBus = body.category === "bus" || body.isBus;
+      const clientPrice = Number(body.clientPrice) || 0;
+      let driverPrice = Number(body.driverPrice);
+      if (!driverPrice || isNaN(driverPrice)) {
+        driverPrice = Math.round(clientPrice / (isBus ? 1.13 : 1.12));
+      }
+      const profit = clientPrice - driverPrice;
+      const paymentOption: "deposit_30" | "full" = body.paymentOption === "full" ? "full" : "deposit_30";
+      const luggage = Number(body.luggage) || 2;
+
+      const chargeAmount = paymentOption === "deposit_30"
+        ? Math.round(clientPrice * 0.30)
+        : Math.round(clientPrice);
+      const remainingCash = clientPrice - chargeAmount;
+
+      const origin = (req.headers.origin || req.headers.referer || process.env.APP_URL || "http://localhost:3000").replace(/\/$/, "");
+
+      const sessionTitle = paymentOption === "deposit_30"
+        ? `Zephyr Transfer (30% Deposit) - ${body.from} to ${body.to}`
+        : `Zephyr Transfer (Full Payment) - ${body.from} to ${body.to}`;
+
+      const sessionDescription = paymentOption === "deposit_30"
+        ? `Booking Ref: ${orderId} | Vehicle: ${body.vehicleType} | Balance €${remainingCash} cash to driver`
+        : `Booking Ref: ${orderId} | Vehicle: ${body.vehicleType} | 100% Fully Prepaid`;
+
+      const pendingOrder: OrderRecord = {
+        id: orderId,
+        createdAt: new Date().toISOString(),
+        status: "pending",
+        category: body.category || (body.isBus ? "bus" : "car"),
+        vehicleType: body.vehicleType || "Executive Chauffeur",
+        from: body.from || "Milan",
+        to: body.to || "Destination",
+        distance: body.distance || "45 km",
+        duration: body.duration || "45 mins",
+        passengers: Number(body.passengers) || 1,
+        luggage,
+        clientPrice,
+        driverPrice,
+        profit,
+        payment: {
+          type: paymentOption,
+          amountPaid: chargeAmount,
+          remainingCash,
+          paidAt: ""
+        },
+        client: {
+          name: body.client?.name || "",
+          phone: body.client?.phone || "",
+          email: body.client?.email || "",
+          flightNotes: body.client?.flightNotes,
+          customNotes: body.client?.customNotes
+        }
+      };
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        customer_email: body.client?.email || undefined,
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: {
+                name: sessionTitle,
+                description: sessionDescription
+              },
+              unit_amount: Math.max(1, chargeAmount) * 100
+            },
+            quantity: 1
+          }
+        ],
+        mode: "payment",
+        success_url: `${origin}/?booking_success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/?booking_cancelled=true`,
+        metadata: {
+          orderId,
+          paymentOption,
+          chargeAmount: String(chargeAmount),
+          remainingCash: String(remainingCash),
+          clientPrice: String(clientPrice),
+          driverPrice: String(driverPrice),
+          vehicleType: body.vehicleType || "Executive Chauffeur",
+          category: body.category || (body.isBus ? "bus" : "car"),
+          from: body.from || "Milan",
+          to: body.to || "Destination",
+          distance: body.distance || "45 km",
+          duration: body.duration || "45 mins",
+          passengers: String(body.passengers || 1),
+          luggage: String(luggage),
+          clientName: body.client?.name || "",
+          clientEmail: body.client?.email || "",
+          clientPhone: body.client?.phone || ""
+        }
+      } as any);
+
+      const pendingOrders = getPendingOrders();
+      pendingOrders[session.id] = pendingOrder;
+      savePendingOrders(pendingOrders);
+
+      console.log(`[Stripe Checkout] Created session ${session.id} for order ${orderId} (${paymentOption}, €${chargeAmount})`);
+
+      res.json({ success: true, url: session.url, sessionId: session.id });
+    } catch (e: any) {
+      console.error("[Stripe Session Error]:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // GET /api/verify-payment: Verify Stripe Checkout session and finalize order
+  app.get("/api/verify-payment", async (req, res) => {
+    try {
+      const sessionId = req.query.session_id as string;
+      if (!sessionId) {
+        return res.status(400).json({ error: "Missing session_id" });
+      }
+
+      const result = await finalizePaidOrder(sessionId);
+      if (result.success) {
+        res.json({ success: true, order: result.order });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // POST /api/stripe-webhook: Webhook handler for Stripe payment events
+  app.post("/api/stripe-webhook", async (req, res) => {
+    try {
+      const event = req.body;
+      if (event?.type === "checkout.session.completed") {
+        const session = event.data?.object;
+        if (session?.id) {
+          await finalizePaidOrder(session.id);
+        }
+      }
+      res.json({ received: true });
+    } catch (e: any) {
+      console.error("[Stripe Webhook Error]:", e);
+      res.status(400).send(`Webhook Error: ${e.message}`);
+    }
+  });
+
   // POST /api/orders: Submit new booking from customer
   app.post("/api/orders", async (req, res) => {
     try {
@@ -322,7 +612,7 @@ async function startServer() {
       const clientPrice = Number(body.clientPrice) || 0;
       let driverPrice = Number(body.driverPrice);
       if (!driverPrice || isNaN(driverPrice)) {
-        driverPrice = Math.round(clientPrice / (isBus ? 1.13 : 1.15));
+        driverPrice = Math.round(clientPrice / (isBus ? 1.13 : 1.12));
       }
       const profit = Number(body.profit) || (clientPrice - driverPrice);
 
@@ -337,6 +627,7 @@ async function startServer() {
         distance: body.distance || '45 km',
         duration: body.duration || '45 mins',
         passengers: Number(body.passengers) || 1,
+        luggage: Number(body.luggage) || 2,
         clientPrice,
         driverPrice,
         profit,
@@ -355,6 +646,11 @@ async function startServer() {
       // Asynchronously broadcast to Telegram driver bot
       broadcastOrder(newOrder).catch((err) => {
         console.warn("[Bot] Broadcast failed:", err);
+      });
+
+      // Asynchronously send branded confirmation email via Resend
+      sendBookingConfirmationEmail(newOrder).catch((err) => {
+        console.warn("[Resend Email] Dispatch failed:", err);
       });
 
       res.status(201).json({ success: true, order: newOrder });
@@ -421,7 +717,12 @@ async function startServer() {
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        watch: {
+          ignored: ['**/data/**', '**/bot/**', '**/*.json']
+        }
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);

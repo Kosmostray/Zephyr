@@ -3,7 +3,7 @@ import { ArrowLeft, User, Mail, Plane, AlertCircle, Loader2, MapPin, Clock, User
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { SelectedVehicle, PriceResult, ClientFormData, ClientFormErrors } from '../../types';
+import { SelectedVehicle, PriceResult, ClientFormData, ClientFormErrors, PaymentOption } from '../../types';
 
 interface BookingFormProps {
   selectedVehicle: SelectedVehicle;
@@ -11,9 +11,10 @@ interface BookingFormProps {
   from: string;
   to: string;
   passengers: number;
+  luggage?: number;
   onBackToVehicles: () => void;
-  onSubmitBooking: (formData: ClientFormData) => void;
-  bookingSending: boolean;
+  onSubmitBooking: (formData: ClientFormData, paymentOption: PaymentOption) => void;
+  bookingSending: boolean | PaymentOption;
 }
 
 export const BookingForm: React.FC<BookingFormProps> = ({
@@ -22,6 +23,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   from,
   to,
   passengers,
+  luggage,
   onBackToVehicles,
   onSubmitBooking,
   bookingSending
@@ -75,8 +77,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     return null;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFormSubmitWithPayment = (paymentOption: PaymentOption) => {
     const newErrors: ClientFormErrors = {};
 
     if (!formData.name.trim() || formData.name.trim().length < 2) {
@@ -99,8 +100,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     }
 
     setErrors({});
-    onSubmitBooking(formData);
+    onSubmitBooking(formData, paymentOption);
   };
+
+  const totalPrice = Math.round(selectedVehicle.price);
+  const prepaymentAmount = Math.round(totalPrice * 0.30);
+  const remainingCash = totalPrice - prepaymentAmount;
 
   return (
     <div className="space-y-6 text-left">
@@ -142,7 +147,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             </div>
             <div className="flex items-center gap-2 text-[#f0a500] text-sm sm:text-base font-semibold font-mono">
               <Users size={17} className="text-[#f0a500] shrink-0" />
-              <span>{passengers} {passengers === 1 ? 'Passenger' : 'Passengers'}</span>
+              <span>{passengers} {passengers === 1 ? 'Passenger' : 'Passengers'}{luggage ? ` · 🧳 ${luggage} Bags` : ''}</span>
             </div>
           </div>
         </div>
@@ -157,7 +162,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       </div>
 
       {/* Final Contact Form */}
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form onSubmit={(e) => e.preventDefault()} noValidate className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Full Name */}
           <div className="space-y-1.5">
@@ -267,27 +272,66 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           </div>
         </div>
 
-        {/* Submit Button */}
-        <div className="pt-2">
-          <button
-            type="submit"
-            disabled={bookingSending}
-            className="w-full bg-[#f0a500] hover:bg-[#d99400] text-black py-4 px-8 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-[0.2em] transition-all duration-300 amber-glow cursor-pointer flex items-center justify-center gap-3 shadow-xl shadow-[#f0a500]/25 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
-          >
-            {bookingSending ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                <span>Dispatching Reservation...</span>
-              </>
-            ) : (
-              <>
-                <span>Confirm Reservation</span>
-                <span>➔</span>
-              </>
-            )}
-          </button>
-          <p className="text-center text-[11px] text-white/40 mt-3 font-mono">
-            No upfront payment required · Free cancellation up to 24h before pickup
+        {/* Payment & Booking Options */}
+        <div className="pt-3 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Option 1: 30% Prepayment */}
+            <div className="flex flex-col">
+              <button
+                type="button"
+                disabled={Boolean(bookingSending)}
+                onClick={() => handleFormSubmitWithPayment('deposit_30')}
+                className="w-full bg-[#f0a500] hover:bg-[#d99400] text-black py-4 px-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 amber-glow cursor-pointer flex flex-col items-center justify-center gap-1 shadow-xl shadow-[#f0a500]/25 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
+              >
+                {bookingSending === 'deposit_30' ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>Connecting Stripe...</span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-sm sm:text-base font-extrabold tracking-normal">Prepayment 30%</span>
+                    <span className="text-xs font-mono font-bold bg-black/20 px-2.5 py-0.5 rounded">
+                      Pay €{prepaymentAmount} now
+                    </span>
+                  </>
+                )}
+              </button>
+              <p className="text-center text-[11px] text-white/60 mt-1.5 font-mono">
+                Remaining <strong className="text-[#f0a500]">€{remainingCash}</strong> cash to driver at transfer
+              </p>
+            </div>
+
+            {/* Option 2: Full Payment */}
+            <div className="flex flex-col">
+              <button
+                type="button"
+                disabled={Boolean(bookingSending)}
+                onClick={() => handleFormSubmitWithPayment('full')}
+                className="w-full bg-white hover:bg-white/90 text-black py-4 px-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-1 shadow-xl shadow-white/20 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
+              >
+                {bookingSending === 'full' ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={18} />
+                    <span>Connecting Stripe...</span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-sm sm:text-base font-extrabold tracking-normal">Full payment</span>
+                    <span className="text-xs font-mono font-bold bg-black/15 px-2.5 py-0.5 rounded">
+                      Pay €{totalPrice} in full
+                    </span>
+                  </>
+                )}
+              </button>
+              <p className="text-center text-[11px] text-white/60 mt-1.5 font-mono">
+                100% online payment · No cash needed on the day
+              </p>
+            </div>
+          </div>
+
+          <p className="text-center text-[11px] text-white/40 pt-1 font-mono">
+            🔒 Secure 256-bit SSL encrypted checkout powered by Stripe · Free cancellation up to 24h before
           </p>
         </div>
       </form>

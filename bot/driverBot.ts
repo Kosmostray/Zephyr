@@ -21,6 +21,15 @@ export interface DriverRecord {
   registeredAt: string;
 }
 
+export interface OrderPaymentInfo {
+  type: 'deposit_30' | 'full';
+  amountPaid: number;
+  remainingCash: number;
+  stripeSessionId?: string;
+  stripePaymentIntent?: string;
+  paidAt?: string;
+}
+
 export interface OrderRecord {
   id: string;
   createdAt: string;
@@ -38,9 +47,11 @@ export interface OrderRecord {
   distance: string;
   duration: string;
   passengers: number;
+  luggage?: number;
   clientPrice: number;
   driverPrice: number;
   profit: number;
+  payment?: OrderPaymentInfo;
   client: {
     name: string;
     phone: string;
@@ -146,23 +157,36 @@ export async function broadcastOrder(order: OrderRecord): Promise<void> {
     return;
   }
 
+  let paymentText = '';
+  if (order.payment?.type === 'deposit_30') {
+    paymentText = 
+      `💳 *Оплата:* Предоплата 30% через Stripe (${order.payment.amountPaid} €)\n` +
+      `💵 *К получению с клиента:* *${order.payment.remainingCash} € наличными*\n`;
+  } else if (order.payment?.type === 'full') {
+    paymentText = 
+      `💳 *Оплата:* 100% Онлайн через Stripe (Полная оплата)\n` +
+      `💵 *С клиента наличными:* *0 € (Полная предоплата)*\n`;
+  }
+
   const messageText = 
-    `🚗 *НОВЕ ЗАМОВЛЕННЯ ZEPHYR / NEW ORDER*\n` +
+    `🚗 *НОВЫЙ ЗАКАЗ ZEPHYR / NEW ORDER*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `🆔 *Код:* \`${order.id}\`\n` +
     `📍 *Маршрут:* *${order.from}* ➔ *${order.to}*\n` +
-    `📏 *Відстань:* ${order.distance} (${order.duration})\n` +
-    `👥 *Пасажирів:* ${order.passengers} pax\n` +
+    `📏 *Расстояние:* ${order.distance} (${order.duration})\n` +
+    `👥 *Пассажиров:* ${order.passengers} pax\n` +
+    `🧳 *Багаж:* ${order.luggage ?? 2} шт.\n` +
     `🚘 *Авто:* *${order.vehicleType}*\n` +
-    `💰 *ОПЛАТА ВОДІЮ:* *${Math.round(order.driverPrice)} €*\n` +
+    `💰 *ОПЛАТА:* *${Math.round(order.driverPrice)} €*\n` +
+    paymentText +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `⚡ Натисніть кнопку нижче, щоб прийняти замовлення. Перший водій забирає!`;
+    `⚡ Нажмите кнопку ниже, чтобы принять заказ. Первый водитель забирает!`;
 
   const replyMarkup = {
     inline_keyboard: [
       [
         {
-          text: `🚀 Взяти замовлення (${Math.round(order.driverPrice)} €)`,
+          text: `🚀 Взять заказ (${Math.round(order.driverPrice)} €)`,
           callback_data: `take_${order.id}`
         }
       ]
@@ -207,7 +231,7 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
   if (orderIndex === -1) {
     await callTelegram('answerCallbackQuery', {
       callback_query_id: queryId,
-      text: '❌ Замовлення не знайдено в системі.',
+      text: '❌ Заказ не найден в системе.',
       show_alert: true
     });
     return;
@@ -217,10 +241,9 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
 
   // Concurrency check: has it already been claimed?
   if (order.status !== 'pending') {
-    const takenByName = order.takenBy?.driverName || 'іншим водієм';
     await callTelegram('answerCallbackQuery', {
       callback_query_id: queryId,
-      text: `❌ Замовлення вже зайнято (${takenByName})!`,
+      text: '❌ Заказ уже взят!',
       show_alert: true
     });
 
@@ -229,7 +252,7 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
       await callTelegram('editMessageText', {
         chat_id: message.chat.id,
         message_id: message.message_id,
-        text: (message.text || '') + `\n\n⛔ *ЗАМОВЛЕННЯ ВЖЕ ВЗЯТО* (${takenByName})`,
+        text: (message.text || '') + '\n\n⛔ *ЗАКАЗ УЖЕ ВЗЯТ*',
         parse_mode: 'Markdown',
         reply_markup: { inline_keyboard: [] }
       });
@@ -249,33 +272,46 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
   orders[orderIndex] = order;
   saveOrders(orders);
 
-  // Edit original message to remove button and stamp winner
+  // Edit original message to remove button and stamp status (without driver's name!)
   if (message?.chat?.id && message?.message_id) {
     await callTelegram('editMessageText', {
       chat_id: message.chat.id,
       message_id: message.message_id,
-      text: (message.text || '') + `\n\n✅ *ВЗЯТО ВОДІЄМ:* ${driverDisplayName}`,
+      text: (message.text || '') + '\n\n✅ *ЗАКАЗ ВЗЯТ*',
       parse_mode: 'Markdown',
       reply_markup: { inline_keyboard: [] }
     });
   }
 
   // Send direct message with full private customer contact details to winner
-  const notes = order.client.customNotes || order.client.flightNotes || 'Немає додаткових приміток';
+  const notes = order.client.customNotes || order.client.flightNotes || 'Нет дополнительных примечаний';
+  let dmPaymentText = '';
+  if (order.payment?.type === 'deposit_30') {
+    dmPaymentText = 
+      `💳 *Статус оплаты:* Предоплата 30% (${order.payment.amountPaid} € онлайн)\n` +
+      `💵 *Взять с клиента наличными:* *${order.payment.remainingCash} €*\n`;
+  } else if (order.payment?.type === 'full') {
+    dmPaymentText = 
+      `💳 *Статус оплаты:* 100% Онлайн оплачено (${order.payment.amountPaid} €)\n` +
+      `💵 *С клиента наличными:* *0 € (Полная предоплата, не брать)*\n`;
+  }
+
   const confirmationText = 
-    `🎉 *ВИТЯГ ЗАМОВЛЕННЯ ПІДТВЕРДЖЕНО!*\n` +
+    `🎉 *ВЗЯТИЕ ЗАКАЗА ПОДТВЕРЖДЕНО!*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🆔 *Код замовлення:* \`${order.id}\`\n` +
+    `🆔 *Код заказа:* \`${order.id}\`\n` +
     `📍 *Маршрут:* *${order.from}* ➔ *${order.to}*\n` +
+    `👥 *Пассажиров:* ${order.passengers} pax | 🧳 *Багаж:* ${order.luggage ?? 2} шт.\n` +
     `🚘 *Авто:* ${order.vehicleType}\n` +
-    `💰 *Ваш дохід (Driver Price):* *${Math.round(order.driverPrice)} €*\n` +
+    `💰 *ОПЛАТА:* *${Math.round(order.driverPrice)} €*\n` +
+    dmPaymentText +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `👤 *КЛІЄНТ:* ${order.client.name}\n` +
+    `👤 *КЛИЕНТ:* ${order.client.name}\n` +
     `📞 *Телефон:* ${order.client.phone}\n` +
     `📧 *Email:* ${order.client.email}\n` +
-    `📝 *Примітки / Рейс:* ${notes}\n` +
+    `📝 *Примечания / Рейс:* ${notes}\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `Гарної поїздки та відмінного сервісу! 🌟`;
+    `Хорошей поездки и отличного сервиса! 🌟`;
 
   const dmResult = await callTelegram('sendMessage', {
     chat_id: from.id,
@@ -289,8 +325,8 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
   await callTelegram('answerCallbackQuery', {
     callback_query_id: queryId,
     text: sentPrivate
-      ? '🎉 Вітаємо! Ви успішно взяли це замовлення. Деталі клієнта надіслано вам в особисті повідомлення!'
-      : '🎉 Вітаємо! Ви взяли замовлення. Будь ласка, відкрийте діалог із ботом @Legkovie_bot і натисніть /start, щоб отримати контакти клієнта!',
+      ? '🎉 Поздравляем! Вы успешно взяли этот заказ. Детали клиента отправлены вам в личные сообщения!'
+      : '🎉 Поздравляем! Вы взяли заказ. Пожалуйста, откройте диалог с ботом @Legkovie_bot и нажмите /start, чтобы получить контакты клиента!',
     show_alert: true
   });
 }
@@ -304,10 +340,10 @@ async function handleStartCommand(chatId: number, from: any): Promise<void> {
     await callTelegram('sendMessage', {
       chat_id: chatId,
       text: 
-        `👋 Вітаємо знову, *${existing.fullName}*!\n\n` +
-        `Ваша поточна категорія: *${existing.category}*\n` +
-        `Ви будете отримувати замовлення для цього класу автомобілів.\n\n` +
-        `Щоб змінити категорію, натисніть одну з кнопок нижче:`,
+        `👋 С возвращением, *${existing.fullName}*!\n\n` +
+        `Ваша текущая категория: *${existing.category}*\n` +
+        `Вы будете получать заказы для этого класса автомобилей.\n\n` +
+        `Чтобы изменить категорию, нажмите одну из кнопок ниже:`,
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
@@ -320,7 +356,7 @@ async function handleStartCommand(chatId: number, from: any): Promise<void> {
             { text: '🚌 Bus / Coach', callback_data: 'cat_Bus' }
           ],
           [
-            { text: '🌟 Всі категорії (All)', callback_data: 'cat_All' }
+            { text: '🌟 Все категории (All)', callback_data: 'cat_All' }
           ]
         ]
       }
@@ -342,9 +378,9 @@ async function handleStartCommand(chatId: number, from: any): Promise<void> {
   await callTelegram('sendMessage', {
     chat_id: chatId,
     text: 
-      `👋 Вітаємо у партнерській мережі водіїв *Zephyr Executive Chauffeur*!\n\n` +
-      `Ви успішно зареєстровані в базі.\n` +
-      `Будь ласка, оберіть вашу основну категорію авто:`,
+      `👋 Добро пожаловать в партнерскую сеть водителей *Zephyr Executive Chauffeur*!\n\n` +
+      `Вы успешно зарегистрированы в базе.\n` +
+      `Пожалуйста, выберите вашу основную категорию авто:`,
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
@@ -357,7 +393,7 @@ async function handleStartCommand(chatId: number, from: any): Promise<void> {
           { text: '🚌 Bus / Coach', callback_data: 'cat_Bus' }
         ],
         [
-          { text: '🌟 Всі категорії (All)', callback_data: 'cat_All' }
+          { text: '🌟 Все категории (All)', callback_data: 'cat_All' }
         ]
       ]
     }
@@ -380,12 +416,12 @@ async function handleCategoryCallback(callbackQuery: any): Promise<void> {
 
   await callTelegram('answerCallbackQuery', {
     callback_query_id: queryId,
-    text: `✅ Категорію встановлено: ${category}`
+    text: `✅ Категория установлена: ${category}`
   });
 
   await callTelegram('sendMessage', {
     chat_id: from.id,
-    text: `👍 Чудово! Вашу категорію оновлено до: *${category}*. Очікуйте на сповіщення про нові замовлення!`
+    text: `👍 Отлично! Ваша категория обновлена на: *${category}*. Ожидайте уведомлений о новых заказах!`
   });
 }
 
