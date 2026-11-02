@@ -628,9 +628,16 @@ async function startServer() {
         duration: body.duration || '45 mins',
         passengers: Number(body.passengers) || 1,
         luggage: Number(body.luggage) || 2,
+        isCustomQuote: Boolean(body.isCustomQuote || body.paymentOption === 'quote_request' || clientPrice === 0),
         clientPrice,
         driverPrice,
         profit,
+        payment: {
+          type: (body.paymentOption || (clientPrice === 0 ? 'quote_request' : 'deposit_30')) as any,
+          amountPaid: 0,
+          remainingCash: 0,
+          paidAt: ''
+        },
         client: {
           name: body.client?.name || '',
           phone: body.client?.phone || '',

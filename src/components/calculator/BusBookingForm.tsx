@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, User, Mail, MessageSquare, AlertCircle, Loader2, MapPin, Clock, Users, Bus, Info } from 'lucide-react';
+import { ArrowLeft, User, Mail, MessageSquare, AlertCircle, Loader2, MapPin, Clock, Users, Bus, Info, ArrowRight } from 'lucide-react';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { isValidPhoneNumber } from 'libphonenumber-js';
@@ -104,6 +104,7 @@ export const BusBookingForm: React.FC<BusBookingFormProps> = ({
 
   const busSpec = selectedVehicle.busSpec;
   const totalPrice = Math.round(selectedVehicle.price);
+  const isCustom = Boolean(selectedVehicle.isCustomQuote || selectedVehicle.price === 0);
   const prepaymentAmount = Math.round(totalPrice * 0.30);
   const remainingCash = totalPrice - prepaymentAmount;
 
@@ -117,13 +118,33 @@ export const BusBookingForm: React.FC<BusBookingFormProps> = ({
           className="text-[#f0a500] hover:text-white flex items-center gap-2 text-xs md:text-sm font-bold uppercase tracking-wider bg-white/5 py-2.5 px-4 rounded-xl hover:bg-white/10 transition-all cursor-pointer border border-[#f0a500]/30 hover:border-[#f0a500] shadow-sm whitespace-nowrap w-fit active:scale-95"
         >
           <ArrowLeft size={16} className="shrink-0" />
-          <span>Change Bus</span>
+          <span>{isCustom ? 'Change Route' : 'Change Bus'}</span>
         </button>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0a500]/10 border border-[#f0a500]/30 text-[11px] sm:text-xs font-mono text-[#f0a500] tracking-wider w-fit">
           <span className="w-1.5 h-1.5 rounded-full bg-[#f0a500] animate-pulse"></span>
           <span>Bus Charter Reservation · Step 2 of 2</span>
         </div>
       </div>
+
+      {/* Disclaimer for routes requiring individual custom calculation (e.g. Lake Como) */}
+      {isCustom && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-[#f0a500]/40 flex items-start gap-3.5 shadow-lg">
+          <div className="w-8 h-8 rounded-xl bg-[#f0a500]/20 flex items-center justify-center text-[#f0a500] shrink-0 mt-0.5">
+            <Info size={19} />
+          </div>
+          <div className="space-y-1 text-left">
+            <h4 className="text-sm sm:text-base font-bold text-[#f0a500] font-serif">
+              Individual Route Calculation Required / Окрема калькуляція маршруту
+            </h4>
+            <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
+              Transfers to or from Lake Como require individual calculation due to localized lake topography, narrow villa access roads, and ferry timing. Please fill in your contact details below so our VIP dispatch operator can review your route and contact you directly with an accurate bespoke quote.
+            </p>
+            <p className="text-[11px] sm:text-xs text-[#f0a500]/90 font-mono pt-1">
+              📍 Цей напрямок потребує окремої калькуляції. Будь ласка, заповніть форму нижче, щоб наш оператор зв’язався з вами для узгодження деталей та точної вартості.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Selected Bus & Journey Summary Card */}
       <div className="p-5 sm:p-6 rounded-2xl bg-black/60 border border-white/15 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-xl">
@@ -164,15 +185,21 @@ export const BusBookingForm: React.FC<BusBookingFormProps> = ({
 
         <div className="md:text-right border-t md:border-t-0 pt-3 md:pt-0 w-full md:w-auto flex md:flex-col justify-between items-baseline md:items-end border-white/10 shrink-0">
           <span className="text-xs uppercase font-mono tracking-widest text-white/50 font-semibold block">
-            {selectedVehicle.isAirportFixed ? 'Fixed Airport Total' : 'Estimated Charter Total'}
+            {isCustom ? 'Rate' : (selectedVehicle.isAirportFixed ? 'Fixed Airport Total' : 'Estimated Charter Total')}
           </span>
-          <div className="text-3xl sm:text-4xl font-mono font-bold text-[#f0a500]">
-            €{Math.round(selectedVehicle.price)}
+          <div className={`font-mono font-bold text-[#f0a500] ${isCustom ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}`}>
+            {isCustom ? 'On Request' : `€${Math.round(selectedVehicle.price)}`}
           </div>
-          {busSpec?.hourlyRate && (
-            <span className="text-xs text-white/60 font-mono mt-0.5">
-              €{getClientHourlyRate(busSpec)}/hr standby & sightseeing
+          {isCustom ? (
+            <span className="text-[11px] text-white/40 block mt-0.5">
+              Individual calculation by operator
             </span>
+          ) : (
+            busSpec?.hourlyRate && (
+              <span className="text-xs text-white/60 font-mono mt-0.5">
+                €{getClientHourlyRate(busSpec)}/hr standby & sightseeing
+              </span>
+            )
           )}
         </div>
       </div>
@@ -296,65 +323,93 @@ export const BusBookingForm: React.FC<BusBookingFormProps> = ({
 
         {/* Payment & Booking Options */}
         <div className="pt-3 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Option 1: 30% Prepayment */}
-            <div className="flex flex-col">
+          {isCustom ? (
+            <div className="flex flex-col space-y-2">
               <button
                 type="button"
                 disabled={Boolean(bookingSending)}
-                onClick={() => handleFormSubmitWithPayment('deposit_30')}
-                className="w-full bg-[#f0a500] hover:bg-[#d99400] text-black py-4 px-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 amber-glow cursor-pointer flex flex-col items-center justify-center gap-1 shadow-xl shadow-[#f0a500]/25 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
+                onClick={() => handleFormSubmitWithPayment('quote_request')}
+                className="w-full bg-[#f0a500] hover:bg-[#d99400] text-black py-4 px-6 rounded-xl font-bold text-sm sm:text-base uppercase tracking-wider transition-all duration-300 amber-glow cursor-pointer flex items-center justify-center gap-2 shadow-xl shadow-[#f0a500]/25 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
               >
-                {bookingSending === 'deposit_30' ? (
+                {bookingSending ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="animate-spin" size={18} />
-                    <span>Connecting Stripe...</span>
+                    <span>Sending Request to Operator...</span>
                   </div>
                 ) : (
-                  <>
-                    <span className="text-sm sm:text-base font-extrabold tracking-normal">Prepayment 30%</span>
-                    <span className="text-xs font-mono font-bold bg-black/20 px-2.5 py-0.5 rounded">
-                      Pay €{prepaymentAmount} now
-                    </span>
-                  </>
-                )}
-              </button>
-              <p className="text-center text-[11px] text-white/60 mt-1.5 font-mono">
-                Remaining <strong className="text-[#f0a500]">€{remainingCash}</strong> cash to driver at transfer
-              </p>
-            </div>
-
-            {/* Option 2: Full Payment */}
-            <div className="flex flex-col">
-              <button
-                type="button"
-                disabled={Boolean(bookingSending)}
-                onClick={() => handleFormSubmitWithPayment('full')}
-                className="w-full bg-white hover:bg-white/90 text-black py-4 px-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-1 shadow-xl shadow-white/20 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
-              >
-                {bookingSending === 'full' ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 className="animate-spin" size={18} />
-                    <span>Connecting Stripe...</span>
+                    <span>Submit Request to Operator</span>
+                    <ArrowRight size={18} />
                   </div>
-                ) : (
-                  <>
-                    <span className="text-sm sm:text-base font-extrabold tracking-normal">Full payment</span>
-                    <span className="text-xs font-mono font-bold bg-black/15 px-2.5 py-0.5 rounded">
-                      Pay €{totalPrice} in full
-                    </span>
-                  </>
                 )}
               </button>
-              <p className="text-center text-[11px] text-white/60 mt-1.5 font-mono">
-                100% online payment · No cash needed on the day
+              <p className="text-center text-[11px] sm:text-xs text-white/60 font-mono">
+                No prepayment required · Our VIP dispatch operator will review your route and contact you directly
               </p>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Option 1: 30% Prepayment */}
+                <div className="flex flex-col">
+                  <button
+                    type="button"
+                    disabled={Boolean(bookingSending)}
+                    onClick={() => handleFormSubmitWithPayment('deposit_30')}
+                    className="w-full bg-[#f0a500] hover:bg-[#d99400] text-black py-4 px-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 amber-glow cursor-pointer flex flex-col items-center justify-center gap-1 shadow-xl shadow-[#f0a500]/25 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
+                  >
+                    {bookingSending === 'deposit_30' ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="animate-spin" size={18} />
+                        <span>Connecting Stripe...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm sm:text-base font-extrabold tracking-normal">Prepayment 30%</span>
+                        <span className="text-xs font-mono font-bold bg-black/20 px-2.5 py-0.5 rounded">
+                          Pay €{prepaymentAmount} now
+                        </span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-center text-[11px] text-white/60 mt-1.5 font-mono">
+                    Remaining <strong className="text-[#f0a500]">€{remainingCash}</strong> cash to driver at transfer
+                  </p>
+                </div>
 
-          <p className="text-center text-[11px] text-white/40 pt-1 font-mono">
-            🔒 Secure checkout powered by Stripe · Free cancellation up to 24h before pickup
-          </p>
+                {/* Option 2: Full Payment */}
+                <div className="flex flex-col">
+                  <button
+                    type="button"
+                    disabled={Boolean(bookingSending)}
+                    onClick={() => handleFormSubmitWithPayment('full')}
+                    className="w-full bg-white hover:bg-white/90 text-black py-4 px-4 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-1 shadow-xl shadow-white/20 disabled:opacity-50 hover:scale-[1.01] active:scale-95"
+                  >
+                    {bookingSending === 'full' ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="animate-spin" size={18} />
+                        <span>Connecting Stripe...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm sm:text-base font-extrabold tracking-normal">Full payment</span>
+                        <span className="text-xs font-mono font-bold bg-black/15 px-2.5 py-0.5 rounded">
+                          Pay €{totalPrice} in full
+                        </span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-center text-[11px] text-white/60 mt-1.5 font-mono">
+                    100% online payment · No cash needed on the day
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-center text-[11px] text-white/40 pt-1 font-mono">
+                🔒 Secure checkout powered by Stripe · Free cancellation up to 24h before pickup
+              </p>
+            </>
+          )}
         </div>
       </form>
     </div>

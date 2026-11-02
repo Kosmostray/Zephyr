@@ -85,9 +85,32 @@ export function generateOrderConfirmationHtml(order: OrderRecord): string {
     `;
   }
 
-  const statusBadgeText = order.payment?.type === 'deposit_30'
-    ? '30% Deposit Paid · Confirmed'
-    : (order.payment?.type === 'full' ? '100% Paid Online · Confirmed' : 'Reservation Confirmed');
+  const isCustom = Boolean(order.isCustomQuote || order.clientPrice === 0 || (order.payment?.type as any) === 'quote_request');
+
+  if (isCustom) {
+    paymentSection = `
+      <tr>
+        <td style="padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #f0a500; text-transform: uppercase; margin-bottom: 8px;">
+            STATUS · INDIVIDUAL CALCULATION IN PROGRESS
+          </div>
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: rgba(240, 165, 0, 0.08); border: 1px solid rgba(240, 165, 0, 0.25); border-radius: 8px; padding: 12px 16px;">
+            <tr>
+              <td style="font-size: 13px; color: #ffffff; line-height: 20px;">
+                Lake Como routes require personalized dispatch assessment due to lake access specifics. Our VIP concierge will review your itinerary and contact you directly via <strong>Phone or WhatsApp (${escapeHtml(order.client.phone)})</strong> with an accurate bespoke calculation.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    `;
+  }
+
+  const statusBadgeText = isCustom
+    ? 'Quote Request Received · Lake Como'
+    : (order.payment?.type === 'deposit_30'
+        ? '30% Deposit Paid · Confirmed'
+        : (order.payment?.type === 'full' ? '100% Paid Online · Confirmed' : 'Reservation Confirmed'));
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -250,9 +273,9 @@ export function generateOrderConfirmationHtml(order: OrderRecord): string {
 
                         <td class="stack-col mobile-spec-row" width="28%" style="padding-top: 16px; vertical-align: top;">
                           <div style="font-size: 10px; color: rgba(255, 255, 255, 0.45); text-transform: uppercase; letter-spacing: 1px;">Total Price</div>
-                          <div style="font-size: 24px; font-weight: 700; color: #f0a500; margin-top: 2px;">
-                            €${Math.round(order.clientPrice)}
-                          </div>
+                          <div style="font-size: ${isCustom ? '20px' : '24px'}; font-weight: 700; color: #f0a500; margin-top: 2px;">
+                            ${isCustom ? 'On Request' : '€' + Math.round(order.clientPrice)}
+                          </div>${isCustom ? '<div style="font-size: 10px; color: rgba(255,255,255,0.45); font-family: sans-serif; text-transform: uppercase;">Individual Calculation</div>' : ''}
                         </td>
                       </tr>
 

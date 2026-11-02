@@ -19,6 +19,7 @@ export interface PriceResult {
   prices: Record<string, number>;
   driverPrices?: Record<string, number>;
   formatSpecial?: boolean;
+  isCustomQuote?: boolean;
 }
 
 export interface SelectedVehicle {
@@ -26,6 +27,7 @@ export interface SelectedVehicle {
   price: number;
   driverPrice?: number;
   isBus?: boolean;
+  isCustomQuote?: boolean;
   busSpec?: BusSpec;
   hourlyRate?: number;
   fixedAirportPrice?: number;
@@ -34,7 +36,7 @@ export interface SelectedVehicle {
 
 export type BookingStep = 'vehicles' | 'form' | 'success';
 
-export type PaymentOption = 'deposit_30' | 'full';
+export type PaymentOption = 'deposit_30' | 'full' | 'quote_request';
 
 export interface OrderPaymentInfo {
   type: PaymentOption;

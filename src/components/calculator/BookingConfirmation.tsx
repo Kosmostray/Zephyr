@@ -28,6 +28,12 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   const displayDuration = confirmedOrder?.duration || result?.duration || '';
   const displayPrice = confirmedOrder?.clientPrice || (selectedVehicle?.price ? Math.round(selectedVehicle.price) : 0);
   const payment = confirmedOrder?.payment;
+  const isCustom = Boolean(
+    confirmedOrder?.isCustomQuote || 
+    displayPrice === 0 || 
+    selectedVehicle?.isCustomQuote ||
+    payment?.type === 'quote_request'
+  );
 
   return (
     <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-[#f0a500]/15 via-black/60 to-black/80 border border-[#f0a500]/50 text-center space-y-5 shadow-2xl">
@@ -37,15 +43,27 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
 
       <div>
         <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-[#f0a500]">
-          {payment?.type === 'deposit_30' ? '30% Deposit Paid · Confirmed' : 'Payment Confirmed · Reserved'}
+          {isCustom
+            ? 'Quote Request Received · Dispatch In Review'
+            : (payment?.type === 'deposit_30' ? '30% Deposit Paid · Confirmed' : 'Payment Confirmed · Reserved')}
         </span>
         <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">
-          Thank You! Your Transfer is Booked
+          {isCustom ? 'Thank You! Your Request Has Been Received' : 'Thank You! Your Transfer is Booked'}
         </h3>
         <p className="text-white/80 max-w-md mx-auto text-xs sm:text-sm mt-2 leading-relaxed">
-          Our VIP dispatch desk has registered your reservation under code{' '}
-          <strong className="text-[#f0a500] font-mono text-base">{bookingRefCode}</strong>.
-          A confirmation with all travel details has been sent to your email.
+          {isCustom ? (
+            <>
+              Our VIP dispatch desk has registered your Lake Como transfer inquiry under reference code{' '}
+              <strong className="text-[#f0a500] font-mono text-base">{bookingRefCode}</strong>.
+              Our operator will calculate your bespoke route and contact you directly via Phone or WhatsApp.
+            </>
+          ) : (
+            <>
+              Our VIP dispatch desk has registered your reservation under code{' '}
+              <strong className="text-[#f0a500] font-mono text-base">{bookingRefCode}</strong>.
+              A confirmation with all travel details has been sent to your email.
+            </>
+          )}
         </p>
       </div>
 
@@ -75,7 +93,9 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
         )}
         <div className="flex justify-between border-t border-white/10 pt-2">
           <span className="text-white/50">Total Price:</span>
-          <span className="text-[#f0a500] font-bold text-sm">€{displayPrice}</span>
+          <span className="text-[#f0a500] font-bold text-sm">
+            {isCustom ? 'On Request (Individual Calculation)' : `€${displayPrice}`}
+          </span>
         </div>
 
         {payment?.type === 'deposit_30' && (

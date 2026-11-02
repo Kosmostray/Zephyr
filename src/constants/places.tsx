@@ -71,3 +71,42 @@ export const getPlaceIcon = (place: string) => {
   }
   return <MapPin size={16} className="text-[#f0a500] shrink-0 transition-transform group-hover:scale-110" />;
 };
+
+export const isLakeComoLocation = (loc: string): boolean => {
+  if (!loc || typeof loc !== 'string') return false;
+  const s = loc.toLowerCase().trim();
+  return (
+    s.includes('como') ||
+    s.includes('комо') ||
+    s.includes('bellagio') ||
+    s.includes('белладж') ||
+    s.includes('tremezzo') ||
+    s.includes('тремец') ||
+    s.includes('varenna') ||
+    s.includes('варенн') ||
+    s.includes('menaggio') ||
+    s.includes('менадж') ||
+    s.includes('cernobbio') ||
+    s.includes('чернобб') ||
+    s.includes('moltrasio') ||
+    s.includes('мольтраз') ||
+    s.includes('lenno') ||
+    s.includes('ленно') ||
+    s.includes('torno') ||
+    s.includes('торно') ||
+    s.includes('laglio') ||
+    s.includes('лальо') ||
+    s.includes('argegno') ||
+    s.includes('арджен') ||
+    s.includes('арген') ||
+    s.includes('lecco') ||
+    s.includes('лекко') ||
+    s.includes('colico') ||
+    s.includes('коліко') ||
+    s.includes('колико')
+  );
+};
+
+export const isLakeComoRoute = (from: string, to: string): boolean => {
+  return isLakeComoLocation(from) || isLakeComoLocation(to);
+};

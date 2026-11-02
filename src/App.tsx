@@ -27,6 +27,7 @@ import { FleetSection } from './components/sections/FleetSection';
 import { ContactSection } from './components/sections/ContactSection';
 import { AdminLogin } from './components/admin/AdminLogin';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { isLakeComoRoute } from './constants/places';
 
 export default function App() {
   // Transfer route & passengers state
@@ -194,6 +195,39 @@ export default function App() {
         }
       }
       
+      // Lake Como route check: requires custom dispatch quote, skip vehicle selection stage
+      const isComo = isLakeComoRoute(originLocation, destLocation);
+      if (isComo) {
+        const isBusMode = passengers >= 9;
+        const defaultVehicleType = isBusMode
+          ? 'VIP Bus Charter (Lake Como Bespoke Route)'
+          : (passengers >= 5 || luggage > 4)
+            ? 'Executive Van (Lake Como Bespoke Route)'
+            : 'Executive Chauffeur (Lake Como Bespoke Route)';
+
+        setResult({
+          distance: element?.distance?.text || "51.0 km",
+          duration: element?.duration?.text || "55 mins",
+          prices: {},
+          driverPrices: {},
+          formatSpecial: true,
+          isCustomQuote: true
+        });
+
+        setSelectedVehicle({
+          type: defaultVehicleType,
+          price: 0,
+          driverPrice: 0,
+          isBus: isBusMode,
+          isCustomQuote: true
+        });
+        setBookingStep('form');
+        setTimeout(() => {
+          calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+        return;
+      }
+
       const priceResult = calculateTransferPrices(originLocation, destLocation, distanceValue);
       
       setResult({
@@ -201,7 +235,8 @@ export default function App() {
         duration: element?.duration?.text || "45 mins",
         prices: priceResult.prices,
         driverPrices: priceResult.driverPrices,
-        formatSpecial: priceResult.formatSpecial
+        formatSpecial: priceResult.formatSpecial,
+        isCustomQuote: false
       });
       setSelectedVehicle(null);
       setBookingStep('vehicles');
@@ -339,10 +374,66 @@ export default function App() {
     setBookingStep('form');
   };
 
-  // Booking dispatch handler (step 2 -> step 3 via Stripe Checkout)
+  // Booking dispatch handler (step 2 -> step 3 via Stripe Checkout or direct Operator Request)
   const handleBookingSubmit = async (formData: any, paymentOption: PaymentOption = 'deposit_30') => {
     setBookingSending(paymentOption);
     const code = `ZEP-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    // Direct submit for routes requiring operator custom calculation (e.g. Lake Como)
+    if (paymentOption === 'quote_request' || selectedVehicle?.isCustomQuote) {
+      try {
+        const isBus = selectedVehicle?.isBus || passengers >= 9;
+        const payload = {
+          id: code,
+          from,
+          to,
+          distance: result?.distance || '51 km',
+          duration: result?.duration || '55 mins',
+          passengers,
+          luggage,
+          vehicleType: selectedVehicle?.type || 'Lake Como Bespoke Route',
+          isBus,
+          isCustomQuote: true,
+          category: isBus ? 'bus' : 'car',
+          clientPrice: 0,
+          driverPrice: 0,
+          profit: 0,
+          paymentOption: 'quote_request',
+          client: {
+            name: formData.name,
+            phone: formData.phone,
+            email: formData.email,
+            flightNotes: formData.flightNotes || formData.customNotes,
+            customNotes: formData.customNotes
+          }
+        };
+
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success && data.order) {
+          setConfirmedOrder(data.order);
+          setBookingRefCode(data.order.id);
+          setBookingStep('success');
+          setTimeout(() => {
+            calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+        } else {
+          alert(data.error || 'Failed to submit quote request. Please try again.');
+        }
+      } catch (err) {
+        console.error("Quote request error:", err);
+        alert('Network error connecting to booking service. Please try again.');
+      } finally {
+        setBookingSending(false);
+      }
+      return;
+    }
+
     try {
       const isBus = selectedVehicle?.isBus || passengers >= 9;
       const driverPrice = selectedVehicle?.driverPrice ?? (
@@ -463,7 +554,15 @@ export default function App() {
           confirmedOrder={confirmedOrder}
           paymentVerificationLoading={paymentVerificationLoading}
           onSelectVehicle={handleSelectVehicle}
-          onBackToVehicles={() => setBookingStep('vehicles')}
+          onBackToVehicles={() => {
+            if (selectedVehicle?.isCustomQuote) {
+              setResult(null);
+              setSelectedVehicle(null);
+              setBookingStep('vehicles');
+            } else {
+              setBookingStep('vehicles');
+            }
+          }}
           onSubmitBooking={handleBookingSubmit}
           onBookAnother={handleBookAnother}
         />

@@ -48,6 +48,7 @@ export interface OrderRecord {
   duration: string;
   passengers: number;
   luggage?: number;
+  isCustomQuote?: boolean;
   clientPrice: number;
   driverPrice: number;
   profit: number;
@@ -157,8 +158,20 @@ export async function broadcastOrder(order: OrderRecord): Promise<void> {
     return;
   }
 
+  const isCustom = Boolean(order.isCustomQuote || order.clientPrice === 0 || (order.payment?.type as any) === 'quote_request');
+
   let paymentText = '';
-  if (order.payment?.type === 'deposit_30') {
+  if (isCustom) {
+    paymentText = 
+      `⚠️ *ЗАПРОС НА ИНДИВИДУАЛЬНЫЙ РАСЧЕТ (ОЗЕРО КОМО)*\n` +
+      `💰 *Цена:* Требуется индивидуальный просчет оператором!\n` +
+      `👤 *Клиент:* *${order.client.name}*\n` +
+      `📞 *Телефон:* \`${order.client.phone}\`\n` +
+      `📧 *Email:* ${order.client.email}\n` +
+      (order.client.flightNotes ? `📝 *Примечания:* ${order.client.flightNotes}\n` : '') +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ *Внимание:* Оператор связывается с клиентом для просчета и согласования стоимости!`;
+  } else if (order.payment?.type === 'deposit_30') {
     paymentText = 
       `💳 *Оплата:* Предоплата 30% через Stripe (${order.payment.amountPaid} €)\n` +
       `💵 *К получению с клиента:* *${order.payment.remainingCash} € наличными*\n`;
@@ -168,30 +181,41 @@ export async function broadcastOrder(order: OrderRecord): Promise<void> {
       `💵 *С клиента наличными:* *0 € (Полная предоплата)*\n`;
   }
 
-  const messageText = 
-    `🚗 *НОВЫЙ ЗАКАЗ ZEPHYR / NEW ORDER*\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🆔 *Код:* \`${order.id}\`\n` +
-    `📍 *Маршрут:* *${order.from}* ➔ *${order.to}*\n` +
-    `📏 *Расстояние:* ${order.distance} (${order.duration})\n` +
-    `👥 *Пассажиров:* ${order.passengers} pax\n` +
-    `🧳 *Багаж:* ${order.luggage ?? 2} шт.\n` +
-    `🚘 *Авто:* *${order.vehicleType}*\n` +
-    `💰 *ОПЛАТА:* *${Math.round(order.driverPrice)} €*\n` +
-    paymentText +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `⚡ Нажмите кнопку ниже, чтобы принять заказ. Первый водитель забирает!`;
+  const messageText = isCustom
+    ? `🛎 *НОВЫЙ ЗАПРОС НА ТРАНСФЕР (КОМО)*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🆔 *Код:* \`${order.id}\`\n` +
+      `📍 *Маршрут:* *${order.from}* ➔ *${order.to}*\n` +
+      `📏 *Расстояние:* ${order.distance} (${order.duration})\n` +
+      `👥 *Пассажиров:* ${order.passengers} pax\n` +
+      `🧳 *Багаж:* ${order.luggage ?? 2} шт.\n` +
+      `🚘 *Авто:* *${order.vehicleType}*\n` +
+      paymentText
+    : `🚗 *НОВЫЙ ЗАКАЗ ZEPHYR / NEW ORDER*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🆔 *Код:* \`${order.id}\`\n` +
+      `📍 *Маршрут:* *${order.from}* ➔ *${order.to}*\n` +
+      `📏 *Расстояние:* ${order.distance} (${order.duration})\n` +
+      `👥 *Пассажиров:* ${order.passengers} pax\n` +
+      `🧳 *Багаж:* ${order.luggage ?? 2} шт.\n` +
+      `🚘 *Авто:* *${order.vehicleType}*\n` +
+      `💰 *ЦЕНА ВОДИТЕЛЯ:* *${Math.round(order.driverPrice)} €*\n` +
+      paymentText +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ Нажмите кнопку ниже, чтобы принять заказ. Первый водитель забирает!`;
 
-  const replyMarkup = {
-    inline_keyboard: [
-      [
-        {
-          text: `🚀 Взять заказ (${Math.round(order.driverPrice)} €)`,
-          callback_data: `take_${order.id}`
-        }
-      ]
-    ]
-  };
+  const replyMarkup = isCustom
+    ? undefined
+    : {
+        inline_keyboard: [
+          [
+            {
+              text: `🚀 Взять заказ (${Math.round(order.driverPrice)} €)`,
+              callback_data: `take_${order.id}`
+            }
+          ]
+        ]
+      };
 
   // 1. Send to public/driver group channel if configured
   if (CHAT_ID) {
@@ -303,7 +327,7 @@ async function handleTakeOrderCallback(callbackQuery: any): Promise<void> {
     `📍 *Маршрут:* *${order.from}* ➔ *${order.to}*\n` +
     `👥 *Пассажиров:* ${order.passengers} pax | 🧳 *Багаж:* ${order.luggage ?? 2} шт.\n` +
     `🚘 *Авто:* ${order.vehicleType}\n` +
-    `💰 *ОПЛАТА:* *${Math.round(order.driverPrice)} €*\n` +
+    `💰 *ЦЕНА ВОДИТЕЛЯ:* *${Math.round(order.driverPrice)} €*\n` +
     dmPaymentText +
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `👤 *КЛИЕНТ:* ${order.client.name}\n` +
