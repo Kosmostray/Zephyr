@@ -134,13 +134,10 @@ export const BusBookingForm: React.FC<BusBookingFormProps> = ({
           </div>
           <div className="space-y-1 text-left">
             <h4 className="text-sm sm:text-base font-bold text-[#f0a500] font-serif">
-              Individual Route Calculation Required / Окрема калькуляція маршруту
+              Individual Route Calculation Required
             </h4>
             <p className="text-xs sm:text-sm text-white/85 leading-relaxed">
               Transfers to or from Lake Como require individual calculation due to localized lake topography, narrow villa access roads, and ferry timing. Please fill in your contact details below so our VIP dispatch operator can review your route and contact you directly with an accurate bespoke quote.
-            </p>
-            <p className="text-[11px] sm:text-xs text-[#f0a500]/90 font-mono pt-1">
-              📍 Цей напрямок потребує окремої калькуляції. Будь ласка, заповніть форму нижче, щоб наш оператор зв’язався з вами для узгодження деталей та точної вартості.
             </p>
           </div>
         </div>
