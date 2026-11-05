@@ -106,7 +106,7 @@ export interface Order {
   takenBy?: {
     driverId: number | string;
     driverName: string;
-    driverPhone: string;
+    driverPhone?: string;
     takenAt: string;
   };
   category: 'car' | 'bus';
@@ -116,9 +116,13 @@ export interface Order {
   distance: string;
   duration: string;
   passengers: number;
+  luggage?: number;
+  isCustomQuote?: boolean;
   clientPrice: number;
   driverPrice: number;
   profit: number;
+  payment?: OrderPaymentInfo;
+  pickupDate?: string;
   client: {
     name: string;
     phone: string;

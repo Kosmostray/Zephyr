@@ -1,5 +1,96 @@
 [
   {
+    "id": "ZEP-591024",
+    "createdAt": "2026-11-05T14:30:00.000Z",
+    "status": "taken",
+    "takenBy": {
+      "driverId": 1042,
+      "driverName": "Marco Rossi",
+      "driverPhone": "+39 347 112 3344",
+      "takenAt": "2026-11-05T14:35:00.000Z"
+    },
+    "category": "car",
+    "vehicleType": "Executive Chauffeur (Mercedes S-Class)",
+    "from": "Milan Malpensa Airport (MXP)",
+    "to": "Four Seasons Hotel Milano",
+    "distance": "51.2 km",
+    "duration": "48 mins",
+    "passengers": 2,
+    "luggage": 3,
+    "clientPrice": 220,
+    "driverPrice": 180,
+    "profit": 40,
+    "payment": {
+      "type": "deposit_30",
+      "amountPaid": 66,
+      "remainingCash": 154,
+      "currency": "eur"
+    },
+    "client": {
+      "name": "Alexander Sterling",
+      "phone": "+44 7700 900123",
+      "email": "a.sterling@london-capital.co.uk",
+      "flightNotes": "Flight BA 564 from LHR Terminal 5. Meet & Greet with name sign."
+    }
+  },
+  {
+    "id": "ZEP-632190",
+    "createdAt": "2026-11-06T10:00:00.000Z",
+    "status": "pending",
+    "category": "car",
+    "vehicleType": "Business Van (Mercedes V-Class)",
+    "from": "Milan City Center (Duomo)",
+    "to": "St. Moritz, Badrutt's Palace Hotel",
+    "distance": "175 km",
+    "duration": "2 hr 45 mins",
+    "passengers": 4,
+    "luggage": 6,
+    "clientPrice": 520,
+    "driverPrice": 450,
+    "profit": 70,
+    "payment": {
+      "type": "full",
+      "amountPaid": 520,
+      "remainingCash": 0,
+      "currency": "eur"
+    },
+    "client": {
+      "name": "Elena Rostova",
+      "phone": "+41 79 123 4567",
+      "email": "elena.rostova@geneva-wealth.ch",
+      "flightNotes": "Ski trip. 4 ski bags and 2 luggage items. Child booster seat required."
+    }
+  },
+  {
+    "id": "ZEP-774012",
+    "createdAt": "2026-11-08T09:15:00.000Z",
+    "status": "pending",
+    "isCustomQuote": true,
+    "category": "car",
+    "vehicleType": "Executive Sedan",
+    "from": "Milan Malpensa Airport (MXP)",
+    "to": "Grand Hotel Tremezzo, Lake Como",
+    "distance": "78 km",
+    "duration": "1 hr 15 mins",
+    "passengers": 2,
+    "luggage": 2,
+    "clientPrice": 0,
+    "driverPrice": 0,
+    "profit": 0,
+    "payment": {
+      "type": "quote_request",
+      "amountPaid": 0,
+      "remainingCash": 0,
+      "currency": "eur"
+    },
+    "client": {
+      "name": "Julian Vance",
+      "phone": "+1 212 555 0199",
+      "email": "julian.vance@vance-holdings.com",
+      "customNotes": "VIP arrival. Need private dock transfer coordination at Tremezzo."
+    }
+  },
+  {
     "id": "TEST-2141",
     "createdAt": "2026-10-13T05:32:06.311Z",
     "status": "pending",

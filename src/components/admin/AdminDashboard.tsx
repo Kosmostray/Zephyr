@@ -15,9 +15,13 @@ import {
   Mail, 
   FileText, 
   Search,
-  ExternalLink
+  ExternalLink,
+  Calendar as CalendarIcon,
+  List as ListIcon
 } from 'lucide-react';
 import { Order } from '../../types';
+import { AdminCalendar } from './AdminCalendar';
+import { OrderModal } from './OrderModal';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -27,6 +31,8 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onGoHome }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'car' | 'bus'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'taken' | 'completed' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +45,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onGoHo
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
+        // If an order is open in modal, keep it updated with fresh state
+        setSelectedOrder((prev) => {
+          if (!prev) return null;
+          const updated = (data.orders || []).find((o: Order) => o.id === prev.id);
+          return updated || prev;
+        });
       }
     } catch (e) {
       console.error('Failed to load orders', e);
@@ -63,6 +75,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onGoHo
       });
       if (res.ok) {
         await fetchOrders();
+        setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, status: newStatus } : prev));
       }
     } catch (err) {
       console.error('Error updating order status', err);
@@ -110,6 +123,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onGoHo
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          {/* View Toggle: List vs Calendar */}
+          <div className="flex items-center bg-black/60 p-1 rounded-xl border border-white/15">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+                viewMode === 'list'
+                  ? 'bg-[#f0a500] text-black shadow-md'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <ListIcon size={14} />
+              <span>List</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('calendar')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
+                viewMode === 'calendar'
+                  ? 'bg-[#f0a500] text-black shadow-md'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <CalendarIcon size={14} />
+              <span>Calendar</span>
+            </button>
+          </div>
+
           <button
             onClick={fetchOrders}
             disabled={loading}
@@ -249,181 +290,215 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, onGoHo
         </div>
       </div>
 
-      {/* Orders Table / Cards */}
-      <div className="max-w-7xl mx-auto">
-        {loading && orders.length === 0 ? (
-          <div className="p-12 text-center text-white/40 flex flex-col items-center justify-center gap-3">
-            <RefreshCw size={24} className="animate-spin text-[#f0a500]" />
-            <span>Loading orders database...</span>
-          </div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="p-12 text-center bg-black/40 rounded-2xl border border-white/10 text-white/50">
-            <AlertCircle size={28} className="mx-auto mb-2 text-[#f0a500]/60" />
-            <p className="text-sm font-medium">No orders found matching the filter criteria.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredOrders.map((order) => {
-              const isBus = order.category === 'bus';
-              return (
-                <div
-                  key={order.id}
-                  className="bg-black/50 border border-white/10 hover:border-white/20 p-5 rounded-2xl shadow-xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 text-left"
-                >
-                  {/* Left: Route, vehicle, status */}
-                  <div className="space-y-2.5 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap text-xs">
-                      <span className="font-mono text-white/40 font-semibold">{order.id}</span>
-                      <span className="text-white/20">•</span>
-                      <span className="text-white/50 font-mono">
-                        {new Date(order.createdAt).toLocaleString()}
-                      </span>
-                      <span className="text-white/20">•</span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[11px] font-bold uppercase tracking-wider ${
-                          isBus 
-                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' 
-                            : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                        }`}
-                      >
-                        {isBus ? <Bus size={12} /> : <Car size={12} />}
-                        <span>{order.vehicleType}</span>
-                      </span>
-
-                      {/* Status Badge */}
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider ${
-                          order.status === 'pending'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                            : order.status === 'taken'
-                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                            : order.status === 'completed'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                            : 'bg-red-500/20 text-red-400 border border-red-500/40'
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                    </div>
-
-                    {/* Route display */}
-                    <div className="flex items-center gap-2 text-base sm:text-lg font-bold text-white flex-wrap">
-                      <span>{order.from}</span>
-                      <span className="text-[#f0a500]">➔</span>
-                      <span>{order.to}</span>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs font-mono text-white/60 flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <MapPin size={13} className="text-[#f0a500]" /> {order.distance}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={13} className="text-[#f0a500]" /> {order.duration}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users size={13} className="text-[#f0a500]" /> {order.passengers} pax
-                      </span>
-                      {order.takenBy && (
-                        <span className="text-cyan-400 flex items-center gap-1 font-semibold">
-                          <CheckCircle2 size={13} /> Driver: {order.takenBy.driverName}
+      {/* Main Content Area: Calendar View OR List View */}
+      {viewMode === 'calendar' ? (
+        <AdminCalendar
+          orders={filteredOrders}
+          onSelectOrder={(order) => setSelectedOrder(order)}
+        />
+      ) : (
+        /* Orders List */
+        <div className="max-w-7xl mx-auto">
+          {loading && orders.length === 0 ? (
+            <div className="p-12 text-center text-white/40 flex flex-col items-center justify-center gap-3">
+              <RefreshCw size={24} className="animate-spin text-[#f0a500]" />
+              <span>Loading orders database...</span>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="p-12 text-center bg-black/40 rounded-2xl border border-white/10 text-white/50">
+              <AlertCircle size={28} className="mx-auto mb-2 text-[#f0a500]/60" />
+              <p className="text-sm font-medium">No orders found matching the filter criteria.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredOrders.map((order) => {
+                const isBus = order.category === 'bus';
+                return (
+                  <div
+                    key={order.id}
+                    onClick={() => setSelectedOrder(order)}
+                    className="bg-black/50 border border-white/10 hover:border-[#f0a500]/40 p-5 rounded-2xl shadow-xl transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-5 text-left cursor-pointer group"
+                  >
+                    {/* Left: Route, vehicle, status */}
+                    <div className="space-y-2.5 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        <span className="font-mono text-[#f0a500] font-bold group-hover:underline">{order.id}</span>
+                        <span className="text-white/20">•</span>
+                        <span className="text-white/50 font-mono">
+                          {new Date(order.pickupDate || order.createdAt).toLocaleString()}
                         </span>
-                      )}
-                    </div>
+                        <span className="text-white/20">•</span>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono text-[11px] font-bold uppercase tracking-wider ${
+                            isBus 
+                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' 
+                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                          }`}
+                        >
+                          {isBus ? <Bus size={12} /> : <Car size={12} />}
+                          <span>{order.vehicleType}</span>
+                        </span>
 
-                    {/* Client contact info */}
-                    <div className="pt-1.5 border-t border-white/5 flex flex-wrap items-center gap-3 text-xs text-white/80">
-                      <span className="font-semibold text-white">{order.client?.name}</span>
-                      <a href={`tel:${order.client?.phone}`} className="flex items-center gap-1 text-[#f0a500] hover:underline">
-                        <Phone size={12} /> {order.client?.phone}
-                      </a>
-                      <a href={`mailto:${order.client?.email}`} className="flex items-center gap-1 text-white/60 hover:text-white hover:underline">
-                        <Mail size={12} /> {order.client?.email}
-                      </a>
-                    </div>
-
-                    {/* Custom notes or flight details */}
-                    {(order.client?.flightNotes || order.client?.customNotes) && (
-                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/70 flex items-start gap-2">
-                        <FileText size={14} className="text-[#f0a500] shrink-0 mt-0.5" />
-                        <span className="italic leading-relaxed whitespace-pre-wrap">
-                          {order.client.customNotes || order.client.flightNotes}
+                        {/* Status Badge */}
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold uppercase tracking-wider ${
+                            order.status === 'pending'
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                              : order.status === 'taken'
+                              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+                              : order.status === 'completed'
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                              : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                          }`}
+                        >
+                          {order.status}
                         </span>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Right: Financial breakdown and status controls */}
-                  <div className="lg:border-l lg:border-white/10 lg:pl-6 flex flex-col justify-between gap-4 shrink-0">
-                    <div className="grid grid-cols-3 gap-3 text-center font-mono">
-                      <div className="bg-black/40 p-2.5 rounded-xl border border-white/10">
-                        <span className="text-[10px] text-white/40 block uppercase">Driver Price</span>
-                        <span className="text-base font-bold text-blue-400">€{Math.round(order.driverPrice)}</span>
+                      {/* Route display */}
+                      <div className="flex items-center gap-2 text-base sm:text-lg font-bold text-white flex-wrap">
+                        <span>{order.from}</span>
+                        <span className="text-[#f0a500]">➔</span>
+                        <span>{order.to}</span>
                       </div>
-                      <div className="bg-black/40 p-2.5 rounded-xl border border-white/10">
-                        <span className="text-[10px] text-white/40 block uppercase">Client Price</span>
-                        <span className="text-base font-bold text-emerald-400">€{Math.round(order.clientPrice)}</span>
-                      </div>
-                      <div className="bg-black/40 p-2.5 rounded-xl border border-[#f0a500]/30 bg-[#f0a500]/5">
-                        <span className="text-[10px] text-[#f0a500] block uppercase font-bold">Profit</span>
-                        <span className="text-base font-bold text-[#f0a500]">€{Math.round(order.profit)}</span>
-                      </div>
-                    </div>
 
-                    {/* Payment details badge */}
-                    {order.payment?.type && (
-                      <div className="text-center">
-                        {order.payment.type === 'deposit_30' ? (
-                          <span className="inline-block text-[11px] font-mono text-[#f0a500] bg-[#f0a500]/10 px-2.5 py-1 rounded-md border border-[#f0a500]/30">
-                            Stripe 30% Deposit (€{order.payment.amountPaid}) · Bal: €{order.payment.remainingCash} cash
-                          </span>
-                        ) : (
-                          <span className="inline-block text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
-                            Stripe 100% Fully Paid (€{order.payment.amountPaid})
+                      <div className="flex items-center gap-4 text-xs font-mono text-white/60 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <MapPin size={13} className="text-[#f0a500]" /> {order.distance}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock size={13} className="text-[#f0a500]" /> {order.duration}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Users size={13} className="text-[#f0a500]" /> {order.passengers} pax
+                        </span>
+                        {order.takenBy && (
+                          <span className="text-cyan-400 flex items-center gap-1 font-semibold">
+                            <CheckCircle2 size={13} /> Driver: {order.takenBy.driverName}
                           </span>
                         )}
                       </div>
-                    )}
 
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-2">
-                      {order.status === 'pending' && (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStatus(order.id, 'taken')}
-                          disabled={actionLoading === order.id}
-                          className="flex-1 py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold cursor-pointer transition-all active:scale-95"
+                      {/* Client contact info */}
+                      <div className="pt-1.5 border-t border-white/5 flex flex-wrap items-center gap-3 text-xs text-white/80">
+                        <span className="font-semibold text-white">{order.client?.name}</span>
+                        <a 
+                          href={`tel:${order.client?.phone}`} 
+                          onClick={(e) => e.stopPropagation()} 
+                          className="flex items-center gap-1 text-[#f0a500] hover:underline"
                         >
-                          Mark Taken
-                        </button>
-                      )}
-                      {order.status !== 'completed' && (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStatus(order.id, 'completed')}
-                          disabled={actionLoading === order.id}
-                          className="flex-1 py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold cursor-pointer transition-all active:scale-95"
+                          <Phone size={12} /> {order.client?.phone}
+                        </a>
+                        <a 
+                          href={`mailto:${order.client?.email}`} 
+                          onClick={(e) => e.stopPropagation()} 
+                          className="flex items-center gap-1 text-white/60 hover:text-white hover:underline"
                         >
-                          Complete
-                        </button>
-                      )}
-                      {order.status !== 'cancelled' && (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStatus(order.id, 'cancelled')}
-                          disabled={actionLoading === order.id}
-                          className="py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-mono text-xs font-semibold cursor-pointer transition-all active:scale-95"
-                        >
-                          Cancel
-                        </button>
+                          <Mail size={12} /> {order.client?.email}
+                        </a>
+                      </div>
+
+                      {/* Custom notes or flight details */}
+                      {(order.client?.flightNotes || order.client?.customNotes) && (
+                        <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/70 flex items-start gap-2">
+                          <FileText size={14} className="text-[#f0a500] shrink-0 mt-0.5" />
+                          <span className="italic leading-relaxed whitespace-pre-wrap">
+                            {order.client.customNotes || order.client.flightNotes}
+                          </span>
+                        </div>
                       )}
                     </div>
+
+                    {/* Right: Financial breakdown and status controls */}
+                    <div 
+                      className="lg:border-l lg:border-white/10 lg:pl-6 flex flex-col justify-between gap-4 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="grid grid-cols-3 gap-3 text-center font-mono">
+                        <div className="bg-black/40 p-2.5 rounded-xl border border-white/10">
+                          <span className="text-[10px] text-white/40 block uppercase">Driver Price</span>
+                          <span className="text-base font-bold text-blue-400">
+                            {order.driverPrice > 0 ? `€${Math.round(order.driverPrice)}` : 'Request'}
+                          </span>
+                        </div>
+                        <div className="bg-black/40 p-2.5 rounded-xl border border-white/10">
+                          <span className="text-[10px] text-white/40 block uppercase">Client Price</span>
+                          <span className="text-base font-bold text-emerald-400">
+                            {order.clientPrice > 0 ? `€${Math.round(order.clientPrice)}` : 'Request'}
+                          </span>
+                        </div>
+                        <div className="bg-black/40 p-2.5 rounded-xl border border-[#f0a500]/30 bg-[#f0a500]/5">
+                          <span className="text-[10px] text-[#f0a500] block uppercase font-bold">Profit</span>
+                          <span className="text-base font-bold text-[#f0a500]">
+                            {order.profit > 0 ? `€${Math.round(order.profit)}` : '—'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Payment details badge */}
+                      {order.payment?.type && (
+                        <div className="text-center">
+                          {order.payment.type === 'deposit_30' ? (
+                            <span className="inline-block text-[11px] font-mono text-[#f0a500] bg-[#f0a500]/10 px-2.5 py-1 rounded-md border border-[#f0a500]/30">
+                              Stripe 30% Deposit (€{order.payment.amountPaid}) · Bal: €{order.payment.remainingCash} cash
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                              Stripe 100% Fully Paid (€{order.payment.amountPaid})
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2">
+                        {order.status === 'pending' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(order.id, 'taken')}
+                            disabled={actionLoading === order.id}
+                            className="flex-1 py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold cursor-pointer transition-all active:scale-95"
+                          >
+                            Mark Taken
+                          </button>
+                        )}
+                        {order.status !== 'completed' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(order.id, 'completed')}
+                            disabled={actionLoading === order.id}
+                            className="flex-1 py-1.5 px-3 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-bold cursor-pointer transition-all active:scale-95"
+                          >
+                            Complete
+                          </button>
+                        )}
+                        {order.status !== 'cancelled' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(order.id, 'cancelled')}
+                            disabled={actionLoading === order.id}
+                            className="py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 font-mono text-xs font-semibold cursor-pointer transition-all active:scale-95"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Order Details Popup Modal */}
+      <OrderModal
+        order={selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        onUpdateStatus={handleUpdateStatus}
+        actionLoading={actionLoading}
+      />
     </div>
   );
 };
